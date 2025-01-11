@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.IntakeSubsystem;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -38,7 +39,11 @@ public class RobotContainer {
 
     private final CommandXboxController joystick = new CommandXboxController(0);
 
+    private final CommandXboxController joystick1 = new CommandXboxController(1);
+
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+
+    public final IntakeSubsystem intake = new IntakeSubsystem();
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
@@ -48,6 +53,7 @@ public class RobotContainer {
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         configureBindings();
+        configureOperatorControls();
     }
 
     private void configureBindings() {
@@ -85,6 +91,21 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        intake.runIntake(joystick1.getLeftY());
+            
+    }
+
+    private void configureOperatorControls() {
+        // Configure your button bindings here
+        joystick1.a().whileTrue(intake.runIntakeAtSpeedCommand(0.5))
+        .onFalse(intake.stopIntakeAtSpeedCommand());
+        
+        joystick1.b().whileTrue(intake.runIntakeAtSpeedCommand(-0.5))
+        .onFalse(intake.stopIntakeAtSpeedCommand());
+
+        joystick1.x().onTrue(intake.toggleIntakeInAndOutCommand()); // Set intake angle in/out
+
     }
 
     public Command getAutonomousCommand() {
