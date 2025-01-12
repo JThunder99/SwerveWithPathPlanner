@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -43,17 +44,26 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-    public final IntakeSubsystem intake = new IntakeSubsystem();
+    //public final IntakeSubsystem intake = new IntakeSubsystem();
+
+    public IntakeSubsystem IntakeSubsystem;
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
+        IntakeSubsystem = new IntakeSubsystem();
+
+        // Register the named commands from each subsystem that may be used in PathPlanner
+        //NamedCommands.registerCommands(Drivetrain.getNamedCommands());
+        NamedCommands.registerCommands(IntakeSubsystem.getNamedCommands());
+        
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
-
+        
         configureBindings();
         configureOperatorControls();
+
     }
 
     private void configureBindings() {
@@ -92,19 +102,19 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        intake.runIntake(joystick1.getLeftY());
+        IntakeSubsystem.runIntake(joystick1.getLeftY());
             
     }
 
     private void configureOperatorControls() {
         // Configure your button bindings here
-        joystick1.a().whileTrue(intake.runIntakeAtSpeedCommand(0.5))
-        .onFalse(intake.stopIntakeAtSpeedCommand());
+        joystick1.a().whileTrue(IntakeSubsystem.runIntakeAtSpeedCommand(0.5))
+        .onFalse(IntakeSubsystem.stopIntakeAtSpeedCommand());
         
-        joystick1.b().whileTrue(intake.runIntakeAtSpeedCommand(-0.5))
-        .onFalse(intake.stopIntakeAtSpeedCommand());
+        joystick1.b().whileTrue(IntakeSubsystem.runIntakeAtSpeedCommand(-0.5))
+        .onFalse(IntakeSubsystem.stopIntakeAtSpeedCommand());
 
-        joystick1.x().onTrue(intake.toggleIntakeInAndOutCommand()); // Set intake angle in/out
+        joystick1.x().onTrue(IntakeSubsystem.toggleIntakeInAndOutCommand()); // Set intake angle in/out
 
     }
 

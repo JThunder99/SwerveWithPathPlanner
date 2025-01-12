@@ -5,6 +5,9 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+
+import java.util.Map;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 
 import edu.wpi.first.math.MathUtil;
@@ -58,7 +61,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   /**
-   * Gets the current position of the Intake Angle from the left NEO's encoder
+   * Gets the current position of the Intake Angle from the left Kraken's encoder
    * @return
    */
   public double getPositionLeft() {
@@ -66,7 +69,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   /**
-   * Gets the current position of the Intake Angle from the right NEO's encoder
+   * Gets the current position of the Intake Angle from the right Kraken's encoder
    * @return
    */
   public double getPositionRight() {
@@ -130,12 +133,29 @@ public class IntakeSubsystem extends SubsystemBase {
     return Commands.runOnce(() -> runIntake(speed));
   }
 
+  /**
+   * Sets the rollers to pick up a game piece at half speed
+   */
+  public Command pickUpGamePieceCommand() {
+    return Commands.runOnce(() -> runIntake(.5));
+  }
+
+  /**
+   * Sets the rollers to eject a game piece at half speed
+   */
+  public Command ejectGamePieceCommand() {
+    return Commands.runOnce(() -> runIntake(-.5));
+  }
+
+  /**
+   * Stops the intake motors
+   */
   public Command stopIntakeAtSpeedCommand() {
     return Commands.runOnce(() -> intakeMotor.stopMotor());
   }
 
   /**
-   * Constantly seeks the angle setpoint for the arm. If interrupted, stops the arm motors
+   * Constantly seeks the angle setpoint for the intake. If interrupted, stops the rotate intake motors
    * @return
    */
   public Command seekAngleSetpointCommand() {
@@ -143,7 +163,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   /**
-   * Sets the intake angle to loading position
+   * Sets the intake angle to scoring position
    */
   public Command setIntakeInCommand() {
     return Commands.runOnce(() -> intakeAngleToggledIn = true);
@@ -165,7 +185,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   /**
-   * Stops the intake arm motors
+   * Stops the intake rotate motors
    * @return
    */
   public Command stopArmMotorsCommand() {
@@ -175,4 +195,18 @@ public class IntakeSubsystem extends SubsystemBase {
     });
   }
 
+  public Map<String, Command> getNamedCommands() {
+    return Map.of(
+      "Rotate_Intake_Out",
+      setIntakeOutCommand(),
+      "Rotate_Intake_In",
+      setIntakeInCommand(),
+      "Pick_Up_Game_Piece",
+      pickUpGamePieceCommand(),
+      "Eject_Game_Piece",
+      ejectGamePieceCommand(),
+      "Stop_Intake",
+      stopIntakeAtSpeedCommand()
+    );
+  }
 }
