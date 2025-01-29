@@ -4,10 +4,12 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import java.util.Map;
 
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 
 import edu.wpi.first.math.MathUtil;
@@ -26,6 +28,8 @@ public class IntakeSubsystem extends SubsystemBase {
   private TalonFX leftIntakeRotationMotor = new TalonFX(11);
   private TalonFX rightIntakeRotationMotor = new TalonFX(12);
 
+  private CANrange intakeLoadSensor = new CANrange(20);
+
   private DigitalInput intakeTopLimitSwitch;
   private DigitalInput intakeBottomLimitSwitch;
 
@@ -40,6 +44,8 @@ public class IntakeSubsystem extends SubsystemBase {
     intakeMotor.getConfigurator().apply(new TalonFXConfiguration());
     leftIntakeRotationMotor.getConfigurator().apply(new TalonFXConfiguration());
     rightIntakeRotationMotor.getConfigurator().apply(new TalonFXConfiguration());
+
+    intakeLoadSensor.getConfigurator().apply(new CANrangeConfiguration());
     
     intakeTopLimitSwitch = new DigitalInput(0);
     intakeBottomLimitSwitch = new DigitalInput(1);
@@ -55,6 +61,19 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   //#region Control Methods
+
+  public boolean isIntakeLoaded() {
+    // Assuming a very short distance indicates the intake is loaded
+    double distance = intakeLoadSensor.getDistance().getValueAsDouble();
+    boolean isDetected = intakeLoadSensor.getIsDetected().getValue();
+    return distance < .1 && isDetected == true; // Adjust the threshold value as needed
+}
+
+public double intakeLoadDistance() {
+  // Distance value from intake load sensor
+  double distance = intakeLoadSensor.getDistance().getValueAsDouble();
+  return distance;
+}
 
   public void runIntake(double speed) {
     intakeMotor.set(speed);
@@ -122,13 +141,17 @@ public class IntakeSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Intake/RightMotorOutput", rightIntakeRotationMotor.get());
 
     SmartDashboard.putNumber("Intake/MotorOutput", intakeMotor.get());
+
+    SmartDashboard.putBoolean("Is Intake Loaded", isIntakeLoaded());
+
+    SmartDashboard.putNumber("Intake Load Sensor Distance", intakeLoadDistance());
+
+    SmartDashboard.putBoolean("Intake Top Limit Switch", intakeTopLimitSwitch.get());
   }
 
-
-  // public void runIntake(double PercentOutput) {
-  //   intakeMotor.set(PercentOutput);
-  // }
-
+  /**
+   * Sets the rollers at set speed
+   */
   public Command runIntakeAtSpeedCommand(double speed) {
     return Commands.runOnce(() -> runIntake(speed));
   }
