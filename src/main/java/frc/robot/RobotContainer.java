@@ -21,7 +21,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.AlgaeIntakeSubsystem;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -46,17 +46,17 @@ public class RobotContainer {
 
     //public final IntakeSubsystem intake = new IntakeSubsystem();
 
-    public IntakeSubsystem IntakeSubsystem;
+    public AlgaeIntakeSubsystem AlgaeIntakeSubsystem;
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
-        IntakeSubsystem = new IntakeSubsystem();
+        AlgaeIntakeSubsystem = new AlgaeIntakeSubsystem();
 
         // Register the named commands from each subsystem that may be used in PathPlanner
         //NamedCommands.registerCommands(Drivetrain.getNamedCommands());
-        NamedCommands.registerCommands(IntakeSubsystem.getNamedCommands());
+        NamedCommands.registerCommands(AlgaeIntakeSubsystem.getNamedCommands());
         
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -102,19 +102,19 @@ public class RobotContainer {
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        IntakeSubsystem.runIntake(joystick1.getLeftY());
+        AlgaeIntakeSubsystem.runIntake(joystick1.getLeftY());
             
     }
 
     private void configureOperatorControls() {
         // Configure your button bindings here
-        joystick1.a().whileTrue(IntakeSubsystem.runIntakeAtSpeedCommand(0.5))
-        .onFalse(IntakeSubsystem.stopIntakeAtSpeedCommand());
+        joystick1.a().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(0.5))
+        .onFalse(AlgaeIntakeSubsystem.stopIntakeAtSpeedCommand());
         
-        joystick1.b().whileTrue(IntakeSubsystem.runIntakeAtSpeedCommand(-0.5))
-        .onFalse(IntakeSubsystem.stopIntakeAtSpeedCommand());
+        joystick1.b().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(-0.5))
+        .onFalse(AlgaeIntakeSubsystem.stopIntakeAtSpeedCommand());
 
-        joystick1.x().onTrue(IntakeSubsystem.toggleIntakeInAndOutCommand()); // Set intake angle in/out
+        //joystick1.x().onTrue(IntakeSubsystem.toggleIntakeInAndOutCommand()); // Set intake angle in/out
 
     }
 
