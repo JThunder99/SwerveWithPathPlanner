@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.AlgaeIntakeSubsystem;
 
 public class RobotContainer {
@@ -48,11 +49,14 @@ public class RobotContainer {
 
     public AlgaeIntakeSubsystem AlgaeIntakeSubsystem;
 
+    public ElevatorSubsystem ElevatorSubsystem;
+
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
         AlgaeIntakeSubsystem = new AlgaeIntakeSubsystem();
+        ElevatorSubsystem = new ElevatorSubsystem();
 
         // Register the named commands from each subsystem that may be used in PathPlanner
         //NamedCommands.registerCommands(Drivetrain.getNamedCommands());
@@ -108,11 +112,17 @@ public class RobotContainer {
 
     private void configureOperatorControls() {
         // Configure your button bindings here
-        joystick1.a().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(0.5))
+        joystick1.a().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(0.1))
         .onFalse(AlgaeIntakeSubsystem.stopIntakeAtSpeedCommand());
         
-        joystick1.b().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(-0.5))
+        joystick1.b().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(-0.1))
         .onFalse(AlgaeIntakeSubsystem.stopIntakeAtSpeedCommand());
+
+        joystick1.y().whileTrue(ElevatorSubsystem.setElevatorSpeedCommand(0.1))
+        .onFalse(ElevatorSubsystem.stopElevatorSpeedCommand());
+
+        joystick1.x().whileTrue(ElevatorSubsystem.setElevatorSpeedCommand(-0.1))
+        .onFalse(ElevatorSubsystem.stopElevatorSpeedCommand());
 
         //joystick1.x().onTrue(IntakeSubsystem.toggleIntakeInAndOutCommand()); // Set intake angle in/out
 
