@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.ElevatorSubsystem.Setpoint;
 import frc.robot.subsystems.AlgaeIntakeSubsystem;
 
 public class RobotContainer {
@@ -112,19 +113,29 @@ public class RobotContainer {
 
     private void configureOperatorControls() {
         // Configure your button bindings here
-        joystick1.a().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(0.1))
-        .onFalse(AlgaeIntakeSubsystem.stopIntakeAtSpeedCommand());
+        // joystick1.a().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(0.1))
+        // .onFalse(AlgaeIntakeSubsystem.stopIntakeAtSpeedCommand());
         
-        joystick1.b().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(-0.1))
-        .onFalse(AlgaeIntakeSubsystem.stopIntakeAtSpeedCommand());
+        // joystick1.b().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(-0.1))
+        // .onFalse(AlgaeIntakeSubsystem.stopIntakeAtSpeedCommand());
 
-        joystick1.y().whileTrue(ElevatorSubsystem.setElevatorSpeedCommand(0.1))
-        .onFalse(ElevatorSubsystem.stopElevatorSpeedCommand());
+        // joystick1.y().whileTrue(ElevatorSubsystem.setElevatorSpeedCommand(0.1))
+        // .onFalse(ElevatorSubsystem.stopElevatorSpeedCommand());
 
-        joystick1.x().whileTrue(ElevatorSubsystem.setElevatorSpeedCommand(-0.1))
-        .onFalse(ElevatorSubsystem.stopElevatorSpeedCommand());
+        // joystick1.x().whileTrue(ElevatorSubsystem.setElevatorSpeedCommand(-0.1))
+        // .onFalse(ElevatorSubsystem.stopElevatorSpeedCommand());
 
-        //joystick1.x().onTrue(IntakeSubsystem.toggleIntakeInAndOutCommand()); // Set intake angle in/out
+        // B Button -> Elevator/Arm to level 2 position
+        joystick1.b().onTrue(ElevatorSubsystem.setSetpointCommand(Setpoint.kFeederStation));
+
+         // A Button -> Elevator/Arm to level 2 position
+         joystick1.a().onTrue(ElevatorSubsystem.setSetpointCommand(Setpoint.kLevel2));
+
+        // X Button -> Elevator/Arm to level 3 position
+        joystick1.x().onTrue(ElevatorSubsystem.setSetpointCommand(Setpoint.kLevel3));
+
+        // Y Button -> Elevator/Arm to level 4 position
+        joystick1.y().onTrue(ElevatorSubsystem.setSetpointCommand(Setpoint.kLevel4));
 
     }
 
