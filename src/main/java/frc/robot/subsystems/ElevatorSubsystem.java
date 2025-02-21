@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -29,17 +28,14 @@ public class ElevatorSubsystem extends SubsystemBase {
   SparkFlexConfig elevator1Config = new SparkFlexConfig();
   SparkFlexConfig elevator2Config = new SparkFlexConfig();
 
-  private DigitalInput intakeTopLimitSwitch;
-  private DigitalInput intakeBottomLimitSwitch;
-
   SparkClosedLoopController  elevatorClosedLoopController = elevator1.getClosedLoopController();
-  RelativeEncoder elevator1Encoder = elevator1.getEncoder();
+  RelativeEncoder elevator1Encoder = elevator1.getExternalEncoder();
 
   public static final int kFeederStation = 0;
-  public static final int kLevel1 = 25;
-  public static final int kLevel2 = 50;
-  public static final int kLevel3 = 75;
-  public static final int kLevel4 = 100;
+  public static final int kLevel1 = 0;
+  public static final int kLevel2 = 2;
+  public static final int kLevel3 = 5;
+  public static final int kLevel4 = 7;
 
   /** Subsystem-wide setpoints */
   public enum Setpoint {
@@ -47,7 +43,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     kLevel1,
     kLevel2,
     kLevel3,
-    kLevel4
+    kLevel4, kGroundPickupPosition
   }
 
   private double elevatorCurrentTarget = kFeederStation;
@@ -55,9 +51,6 @@ public class ElevatorSubsystem extends SubsystemBase {
   private boolean wasResetByLimit = false;
 
   public ElevatorSubsystem() {
-
-    intakeTopLimitSwitch = new DigitalInput(0);
-    intakeBottomLimitSwitch = new DigitalInput(1);
 
     elevator1Config
     .inverted(false)
@@ -67,13 +60,13 @@ public class ElevatorSubsystem extends SubsystemBase {
     .positionConversionFactor(1.0);
 
     elevator1Config.closedLoop
-        .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        .feedbackSensor(FeedbackSensor.kAlternateOrExternalEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
         .p(0.4)
         .i(0)
         .d(0)
-        .outputRange(-.5, 5);
+        .outputRange(-.05, .05);
 
         elevator1Config.closedLoop.maxMotion
         // Set MAXMotion parameters for position control. We don't need to pass
@@ -96,15 +89,26 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   //#region Control Methods
 
-  public void setElevatorSpeed(double speed) {
-    elevator1.set(speed);
-  }
+  // public void setElevatorSpeed(double speed) {
+  //   elevator1.set(speed);
+  // }
 
-  public void stopElevatorSpeed() {
-    elevator1.stopMotor();
-  }
+  // public void stopElevatorSpeed() {
+  //   elevator1.stopMotor();
+  // }
+
+  // private void moveToSetpoint() {
+  //   elevatorClosedLoopController.setReference(
+  //     elevatorCurrentTarget, ControlType.kMAXMotionPositionControl);
+  // }
 
   private void moveToSetpoint() {
+    // Clamp target to safe range based on limits
+    if (elevator1.getReverseLimitSwitch().isPressed() && elevatorCurrentTarget < 0) {
+      elevatorCurrentTarget = 0; // Don’t go below bottom
+    } else if (elevator1.getForwardLimitSwitch().isPressed() && elevatorCurrentTarget > kLevel4) {
+      elevatorCurrentTarget = kLevel4; // Don’t exceed top
+    }
     elevatorClosedLoopController.setReference(
       elevatorCurrentTarget, ControlType.kMAXMotionPositionControl);
   }
@@ -112,13 +116,11 @@ public class ElevatorSubsystem extends SubsystemBase {
   /** Zero the elevator encoder when the limit switch is pressed. */
   private void zeroElevatorOnLimitSwitch() {
       if (!wasResetByLimit && elevator1.getReverseLimitSwitch().isPressed()) {
-      //if (!wasResetByLimit && intakeBottomLimitSwitch.get()) {
       // Zero the encoder only when the limit switch is switches from "unpressed" to "pressed" to
       // prevent constant zeroing while pressed
       elevator1Encoder.setPosition(0);
       wasResetByLimit = true;
       } else if (!elevator1.getReverseLimitSwitch().isPressed()) {
-      //} else if (!intakeBottomLimitSwitch.get()) {
       wasResetByLimit = false;
     }
   }
@@ -135,17 +137,17 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
   }
 
-  public Command setElevatorSpeedCommand(double speed) {
-    return Commands.runOnce(() -> setElevatorSpeed(speed));
-  }
+  // public Command setElevatorSpeedCommand(double speed) {
+  //   return Commands.runOnce(() -> setElevatorSpeed(speed));
+  // }
 
-  public Command stopElevatorSpeedCommand() {
-    return Commands.runOnce(() -> stopElevatorSpeed());
-  }
+  // public Command stopElevatorSpeedCommand() {
+  //   return Commands.runOnce(() -> stopElevatorSpeed());
+  // }
 
   /**
-   * Command to set the subsystem setpoint. This will set the arm and elevator to their predefined
-   * positions for the given setpoint.
+   * Command to set the subsystem setpoint. This will set the elevator to the predefined
+   * position for the given setpoint.
    */
   public Command setSetpointCommand(Setpoint setpoint) {
     return this.runOnce(
@@ -176,8 +178,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     moveToSetpoint();
     zeroElevatorOnLimitSwitch();
     zeroOnUserButton();
-    SmartDashboard.putBoolean("Intake Top Limit Switch", intakeTopLimitSwitch.get());
-    SmartDashboard.putBoolean("Intake Bottom Limit Switch", intakeBottomLimitSwitch.get());
+    SmartDashboard.putBoolean("Rev Intake Top Limit Switch",elevator1.getForwardLimitSwitch().isPressed());
     SmartDashboard.putBoolean("Rev Intake Bottom Limit Switch",elevator1.getReverseLimitSwitch().isPressed());
     SmartDashboard.putNumber("Elevator Target Position", elevatorCurrentTarget);
     SmartDashboard.putNumber("Elevator Actual Position", elevator1Encoder.getPosition());

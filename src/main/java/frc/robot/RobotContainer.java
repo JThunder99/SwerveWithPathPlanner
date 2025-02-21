@@ -23,7 +23,8 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem.Setpoint;
-import frc.robot.subsystems.AlgaeIntakeSubsystem;
+import frc.robot.subsystems.AlgaeSubsystem;
+import frc.robot.subsystems.AlgaeSubsystem.AlgaeSetpoint;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -48,7 +49,7 @@ public class RobotContainer {
 
     //public final IntakeSubsystem intake = new IntakeSubsystem();
 
-    public AlgaeIntakeSubsystem AlgaeIntakeSubsystem;
+    public AlgaeSubsystem AlgaeSubsystem;
 
     public ElevatorSubsystem ElevatorSubsystem;
 
@@ -56,12 +57,12 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
-        AlgaeIntakeSubsystem = new AlgaeIntakeSubsystem();
+        AlgaeSubsystem = new AlgaeSubsystem();
         ElevatorSubsystem = new ElevatorSubsystem();
 
         // Register the named commands from each subsystem that may be used in PathPlanner
         //NamedCommands.registerCommands(Drivetrain.getNamedCommands());
-        NamedCommands.registerCommands(AlgaeIntakeSubsystem.getNamedCommands());
+        NamedCommands.registerCommands(AlgaeSubsystem.getNamedCommands());
         
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -106,8 +107,6 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
-
-        AlgaeIntakeSubsystem.runIntake(joystick1.getLeftY());
             
     }
 
@@ -136,6 +135,14 @@ public class RobotContainer {
 
         // Y Button -> Elevator/Arm to level 4 position
         joystick1.y().onTrue(ElevatorSubsystem.setSetpointCommand(Setpoint.kLevel4));
+
+        joystick1.povLeft().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kStoredPosition));
+
+        joystick1.povDown().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kGroundPickupPosition));
+
+        joystick1.povRight().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kReefPickupPosition));
+
+        joystick1.povUp().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kShootingPosition));
 
     }
 
