@@ -5,22 +5,19 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.CoralSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem.Setpoint;
 import frc.robot.subsystems.AlgaeSubsystem;
@@ -47,11 +44,9 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-    //public final IntakeSubsystem intake = new IntakeSubsystem();
-
     public AlgaeSubsystem AlgaeSubsystem;
-
     public ElevatorSubsystem ElevatorSubsystem;
+    public CoralSubsystem CoralSubsystem;
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
@@ -59,10 +54,13 @@ public class RobotContainer {
     public RobotContainer() {
         AlgaeSubsystem = new AlgaeSubsystem();
         ElevatorSubsystem = new ElevatorSubsystem();
+        CoralSubsystem = new CoralSubsystem();
 
         // Register the named commands from each subsystem that may be used in PathPlanner
         //NamedCommands.registerCommands(Drivetrain.getNamedCommands());
         NamedCommands.registerCommands(AlgaeSubsystem.getNamedCommands());
+        NamedCommands.registerCommands(ElevatorSubsystem.getNamedCommands());
+        NamedCommands.registerCommands(CoralSubsystem.getNamedCommands());
         
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
         SmartDashboard.putData("Auto Mode", autoChooser);

@@ -17,6 +17,9 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
+
+import java.util.Map;
+
 import com.revrobotics.RelativeEncoder;
 
 public class ElevatorSubsystem extends SubsystemBase {
@@ -182,5 +185,16 @@ public class ElevatorSubsystem extends SubsystemBase {
     SmartDashboard.putBoolean("Rev Intake Bottom Limit Switch",elevator1.getReverseLimitSwitch().isPressed());
     SmartDashboard.putNumber("Elevator Target Position", elevatorCurrentTarget);
     SmartDashboard.putNumber("Elevator Actual Position", elevator1Encoder.getPosition());
+  }
+
+  public Map<String, Command> getNamedCommands() {
+    return Map.of(
+      // "Pick_Up_Game_Piece",
+      // pickUpGamePieceCommand(),
+      // "Eject_Game_Piece",
+      // ejectGamePieceCommand(),
+      // "Stop_Intake",
+      // stopIntakeAtSpeedCommand()
+    );
   }
 }
