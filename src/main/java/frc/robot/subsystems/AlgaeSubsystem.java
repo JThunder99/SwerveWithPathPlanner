@@ -33,20 +33,20 @@ public class AlgaeSubsystem extends SubsystemBase {
   SparkClosedLoopController algaeRotationLoopController = algaeIntakeRotationMotor.getClosedLoopController();
   RelativeEncoder algaeRotationEncoder = algaeIntakeRotationMotor.getExternalEncoder();
 
-  public static final double kStoredPosition = 0;
+  public static final double kStowedPosition = 0;
   public static final double kGroundPickupPosition = .8;
   public static final double kReefPickupPosition = .5;
   public static final double kShootingPosition = .2;
 
   /** Subsystem-wide setpoints */
   public enum AlgaeSetpoint {
-    kStoredPosition,
+    kStowedPosition,
     kGroundPickupPosition,
     kReefPickupPosition,
     kShootingPosition
   }
 
-  private double algaeRotationCurrentTarget = kStoredPosition;
+  private double algaeRotationCurrentTarget = kStowedPosition;
 
   private CANrange intakeLoadSensor = new CANrange(20);
 
@@ -163,8 +163,8 @@ public class AlgaeSubsystem extends SubsystemBase {
     return this.runOnce(
         () -> {
           switch (algaesetpoint) {
-            case kStoredPosition:
-            algaeRotationCurrentTarget = kStoredPosition;
+            case kStowedPosition:
+            algaeRotationCurrentTarget = kStowedPosition;
               break;
             case kGroundPickupPosition:
             algaeRotationCurrentTarget = kGroundPickupPosition;
@@ -181,12 +181,20 @@ public class AlgaeSubsystem extends SubsystemBase {
 
   public Map<String, Command> getNamedCommands() {
     return Map.of(
-      "Pick_Up_Game_Piece",
+      "Pick_Up_Algae",
       pickUpGamePieceCommand(),
-      "Eject_Game_Piece",
+      "Eject_Algae",
       ejectGamePieceCommand(),
-      "Stop_Intake",
-      stopIntakeAtSpeedCommand()
+      "Stop_Algae_Intake",
+      stopIntakeAtSpeedCommand(),
+      "Set_Algae_Setpoint_Stowed",
+      setSetpointCommand(AlgaeSetpoint.kStowedPosition),
+      "Set_Algae_Setpoint_Ground_Pickup",
+      setSetpointCommand(AlgaeSetpoint.kGroundPickupPosition),
+      "Set_Algae_Setpoint_Reef_Pickup",
+      setSetpointCommand(AlgaeSetpoint.kReefPickupPosition),
+      "Set_Algae_Setpoint_Shooting",
+      setSetpointCommand(AlgaeSetpoint.kShootingPosition)
     );
   }
 }

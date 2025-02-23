@@ -34,22 +34,26 @@ public class ElevatorSubsystem extends SubsystemBase {
   SparkClosedLoopController  elevatorClosedLoopController = elevator1.getClosedLoopController();
   RelativeEncoder elevator1Encoder = elevator1.getExternalEncoder();
 
+  public static final int kStowedPosition = 0;
   public static final int kFeederStation = 0;
   public static final int kLevel1 = 0;
   public static final int kLevel2 = 2;
   public static final int kLevel3 = 5;
   public static final int kLevel4 = 7;
+  public static final int kAlgaeShootingPosition = 9;
 
   /** Subsystem-wide setpoints */
   public enum Setpoint {
+    kStowedPosition,
     kFeederStation,
     kLevel1,
     kLevel2,
     kLevel3,
-    kLevel4, kGroundPickupPosition
+    kLevel4,
+    kAlgaeShootingPosition
   }
 
-  private double elevatorCurrentTarget = kFeederStation;
+  private double elevatorCurrentTarget = kStowedPosition;
   private boolean wasResetByButton = false;
   private boolean wasResetByLimit = false;
 
@@ -156,6 +160,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     return this.runOnce(
         () -> {
           switch (setpoint) {
+            case kStowedPosition:
+              elevatorCurrentTarget = kStowedPosition;
+              break;
             case kFeederStation:
               elevatorCurrentTarget = kFeederStation;
               break;
@@ -170,6 +177,9 @@ public class ElevatorSubsystem extends SubsystemBase {
               break;
             case kLevel4:
               elevatorCurrentTarget = kLevel4;
+              break;
+            case kAlgaeShootingPosition:
+              elevatorCurrentTarget = kAlgaeShootingPosition;
               break;
           }
         });
@@ -189,12 +199,20 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public Map<String, Command> getNamedCommands() {
     return Map.of(
-      // "Pick_Up_Game_Piece",
-      // pickUpGamePieceCommand(),
-      // "Eject_Game_Piece",
-      // ejectGamePieceCommand(),
-      // "Stop_Intake",
-      // stopIntakeAtSpeedCommand()
+      "Set_Elevator_Setpoint_Stowed",
+      setSetpointCommand(Setpoint.kStowedPosition),
+      "Set_Elevator_Setpoint_FeederStation",
+      setSetpointCommand(Setpoint.kFeederStation),
+      "Set_Elevator_Setpoint_Level1",
+      setSetpointCommand(Setpoint.kLevel1),
+      "Set_Elevator_Setpoint_Level2",
+      setSetpointCommand(Setpoint.kLevel2),
+      "Set_Elevator_Setpoint_Level3",
+      setSetpointCommand(Setpoint.kLevel3),
+      "Set_Elevator_Setpoint_Level4",
+      setSetpointCommand(Setpoint.kLevel4),
+      "Set_Elevator_Setpoint_AlgaeShootingPosition",
+      setSetpointCommand(Setpoint.kAlgaeShootingPosition)
     );
   }
 }

@@ -189,12 +189,18 @@ public class CoralSubsystem extends SubsystemBase {
 
   public Map<String, Command> getNamedCommands() {
     return Map.of(
-      "Pick_Up_Game_Piece",
+      "Pick_Up_Coral",
       pickUpCoralCommand(),
-      "Eject_Game_Piece",
+      "Eject_Coral",
       ejectCoralCommand(),
-      "Stop_Intake",
-      stopCoralIntakeAtSpeedCommand()
+      "Stop_Coral_Intake",
+      stopCoralIntakeAtSpeedCommand(),
+      "Set_Coral_Setpoint_Stowed",
+      setCoralSetpointCommand(CoralSetpoint.kStowedPosition),
+      "Set_Coral_Setpoint_Human_Pickup",
+      setCoralSetpointCommand(CoralSetpoint.kHumanPickupPosition),
+      "Set_Coral_Setpoint_Shooting",
+      setCoralSetpointCommand(CoralSetpoint.kShootingPosition)
     );
   }
 }

@@ -63,6 +63,7 @@ public class RobotContainer {
         NamedCommands.registerCommands(CoralSubsystem.getNamedCommands());
         
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
+        autoChooser.addOption("Mid_to_mid_reef", getAutonomousCommand());
         SmartDashboard.putData("Auto Mode", autoChooser);
         
         configureBindings();
@@ -134,7 +135,7 @@ public class RobotContainer {
         // Y Button -> Elevator/Arm to level 4 position
         joystick1.y().onTrue(ElevatorSubsystem.setSetpointCommand(Setpoint.kLevel4));
 
-        joystick1.povLeft().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kStoredPosition));
+        joystick1.povLeft().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kStowedPosition));
 
         joystick1.povDown().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kGroundPickupPosition));
 
