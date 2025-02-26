@@ -35,6 +35,7 @@ public class AlgaeSubsystem extends SubsystemBase {
 
   public static final double kStowedPosition = 0;
   public static final double kGroundPickupPosition = .8;
+  public static final double kProcessorPosition = .6;
   public static final double kReefPickupPosition = .5;
   public static final double kShootingPosition = .2;
 
@@ -42,17 +43,18 @@ public class AlgaeSubsystem extends SubsystemBase {
   public enum AlgaeSetpoint {
     kStowedPosition,
     kGroundPickupPosition,
+    kProcessorPosition,
     kReefPickupPosition,
     kShootingPosition
   }
 
   private double algaeRotationCurrentTarget = kStowedPosition;
 
-  private CANrange intakeLoadSensor = new CANrange(20);
+  private CANrange algaeIntakeLoadSensor = new CANrange(20);
 
   public AlgaeSubsystem() {
 
-    intakeLoadSensor.getConfigurator().apply(new CANrangeConfiguration());
+    algaeIntakeLoadSensor.getConfigurator().apply(new CANrangeConfiguration());
 
     algaeMotorConfig
     .inverted(false)
@@ -90,10 +92,10 @@ public class AlgaeSubsystem extends SubsystemBase {
 
   //#region Control Methods
 
-  public boolean isIntakeLoaded() {
+  public boolean isAlgaeIntakeLoaded() {
     // Assuming a very short distance indicates the intake is loaded
-    double distance = intakeLoadSensor.getDistance().getValueAsDouble();
-    boolean isDetected = intakeLoadSensor.getIsDetected().getValue();
+    double distance = algaeIntakeLoadSensor.getDistance().getValueAsDouble();
+    boolean isDetected = algaeIntakeLoadSensor.getIsDetected().getValue();
     return distance < .1 && isDetected == true; // Adjust the threshold value as needed
 }
 
@@ -105,6 +107,10 @@ public class AlgaeSubsystem extends SubsystemBase {
 
   public void runIntake(double speed) {
     algaeIntakeMotor.set(speed);
+  }
+
+  public void holdAlgaeIntake() {
+    algaeIntakeMotor.set(0.1); // Adjust the hold power as needed
   }
 
   private void moveToSetpoint() {
@@ -119,12 +125,17 @@ public class AlgaeSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("Intake/MotorOutput", algaeIntakeMotor.get());
 
-    SmartDashboard.putBoolean("Is Intake Loaded", isIntakeLoaded());
+    SmartDashboard.putBoolean("Is Intake Loaded", isAlgaeIntakeLoaded());
 
-    SmartDashboard.putNumber("Intake Load Sensor Distance", intakeLoadSensor.getDistance().getValueAsDouble());
+    SmartDashboard.putNumber("Intake Load Sensor Distance", algaeIntakeLoadSensor.getDistance().getValueAsDouble());
 
     SmartDashboard.putNumber("Algae Target Position", algaeRotationCurrentTarget);
     SmartDashboard.putNumber("Algae Actual Position", algaeRotationEncoder.getPosition());
+
+    // Check if the algae intake is loaded and set the hold power
+    if (isAlgaeIntakeLoaded()) {
+      holdAlgaeIntake();
+    }
   }
 
   /**
@@ -169,6 +180,9 @@ public class AlgaeSubsystem extends SubsystemBase {
             case kGroundPickupPosition:
             algaeRotationCurrentTarget = kGroundPickupPosition;
               break;
+            case kProcessorPosition:
+              algaeRotationCurrentTarget = kProcessorPosition;
+                break;
             case kReefPickupPosition:
             algaeRotationCurrentTarget = kReefPickupPosition;
               break;
@@ -191,6 +205,8 @@ public class AlgaeSubsystem extends SubsystemBase {
       setSetpointCommand(AlgaeSetpoint.kStowedPosition),
       "Set_Algae_Setpoint_Ground_Pickup",
       setSetpointCommand(AlgaeSetpoint.kGroundPickupPosition),
+      "Set_Algae_Setpoint_Processor",
+      setSetpointCommand(AlgaeSetpoint.kProcessorPosition),
       "Set_Algae_Setpoint_Reef_Pickup",
       setSetpointCommand(AlgaeSetpoint.kReefPickupPosition),
       "Set_Algae_Setpoint_Shooting",

@@ -111,6 +111,10 @@ public class CoralSubsystem extends SubsystemBase {
     coralIntakeMotor.set(speed);
   }
 
+  public void holdCoralIntake() {
+    coralIntakeMotor.set(0.1); // Adjust the hold power as needed
+  }
+
   private void moveCoralToSetpoint() {
     coralRotationLoopController.setReference(
       coralRotationCurrentTarget, ControlType.kMAXMotionPositionControl);
@@ -131,6 +135,11 @@ public class CoralSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("Coral Target Position", coralRotationCurrentTarget);
     SmartDashboard.putNumber("Coral Actual Position", coralRotationEncoder.getPosition());
+
+    // Check if the coral intake is loaded and set the hold power
+    if (isCoralIntakeLoaded()) {
+      holdCoralIntake();
+    }
   }
 
   //#region Commands
