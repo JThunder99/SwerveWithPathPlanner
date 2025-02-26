@@ -94,6 +94,10 @@ public class ElevatorSubsystem extends SubsystemBase {
     elevator1Encoder.setPosition(0);
   }
 
+  public double getElevatorCurrentTarget() {
+    return elevatorCurrentTarget;
+  }
+
   //#region Control Methods
 
   // public void setElevatorSpeed(double speed) {

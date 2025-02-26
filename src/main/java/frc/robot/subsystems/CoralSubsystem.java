@@ -92,6 +92,10 @@ public class CoralSubsystem extends SubsystemBase {
 
   }
 
+  public double getCoralRotationCurrentTarget() {
+    return coralRotationCurrentTarget;
+  }
+
   //#region Control Methods
 
   public boolean isCoralIntakeLoaded() {

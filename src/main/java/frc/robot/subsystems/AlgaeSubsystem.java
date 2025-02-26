@@ -90,6 +90,10 @@ public class AlgaeSubsystem extends SubsystemBase {
     algaeRotationEncoder.setPosition(0);
   }
 
+  public double getAlgaeRotationCurrentTarget() {
+    return algaeRotationCurrentTarget;
+  }
+
   //#region Control Methods
 
   public boolean isAlgaeIntakeLoaded() {

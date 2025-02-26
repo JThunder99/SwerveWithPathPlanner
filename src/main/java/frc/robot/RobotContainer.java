@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
@@ -22,6 +23,7 @@ import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.ElevatorSubsystem.Setpoint;
 import frc.robot.subsystems.AlgaeSubsystem;
 import frc.robot.subsystems.AlgaeSubsystem.AlgaeSetpoint;
+import frc.robot.subsystems.CoralSubsystem.CoralSetpoint;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -143,6 +145,154 @@ public class RobotContainer {
 
         joystick1.povUp().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kShootingPosition));
 
+    }
+
+    /**
+     * Transitions the robot to a specified state configuration, enforcing all subsystem rules.
+     * @param config The target state configuration
+     * @return Command to execute the transition
+     */
+    public Command transitionToStateCommand(RobotStateConfig config) {
+        Command adjustCoral = Commands.either(
+            Commands.none(),
+            Commands.sequence(
+                Commands.runOnce(() -> {
+                    if (config.coralTarget == CoralSetpoint.kStartingPosition &&
+                        ElevatorSubsystem.getElevatorCurrentTarget() != getSetpointValue(config.elevatorTarget)) {
+                        throw new IllegalStateException("Coral cannot move to starting position while elevator is moving");
+                    }
+                }).ignoringDisable(true),
+                Commands.runOnce(() -> {
+                    if (CoralSubsystem.isCoralIntakeLoaded() && config.coralTarget == CoralSetpoint.kStartingPosition) {
+                        throw new IllegalStateException("Coral cannot move to starting position when loaded");
+                    }
+                }).ignoringDisable(true),
+                Commands.runOnce(() -> {
+                    if (config.coralTarget == CoralSetpoint.kShootingPosition &&
+                        config.algaeTarget == AlgaeSetpoint.kShootingPosition) {
+                        throw new IllegalStateException("Coral and algae cannot both be in shooting positions simultaneously");
+                    }
+                }).ignoringDisable(true),
+                Commands.either(
+                    CoralSubsystem.setCoralSetpointCommand(config.coralTarget),
+                    CoralSubsystem.setCoralSetpointCommand(CoralSetpoint.kStowedPosition),
+                    () -> config.algaeTarget != AlgaeSetpoint.kGroundPickupPosition &&
+                          config.algaeTarget != AlgaeSetpoint.kReefPickupPosition
+                ),
+                Commands.either(
+                    Commands.none(),
+                    AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kStowedPosition),
+                    () -> config.coralTarget != CoralSetpoint.kHumanPickupPosition ||
+                          Math.abs(AlgaeSubsystem.getAlgaeRotationCurrentTarget() - AlgaeSubsystem.kStowedPosition) < 0.01
+                ),
+                Commands.either(
+                    CoralSubsystem.setCoralSetpointCommand(config.coralTarget),
+                    CoralSubsystem.setCoralSetpointCommand(CoralSetpoint.kStowedPosition),
+                    () -> config.algaeTarget != AlgaeSetpoint.kProcessorPosition
+                ),
+                CoralSubsystem.setCoralSetpointCommand(config.coralTarget)
+            ),
+            () -> Math.abs(CoralSubsystem.getCoralRotationCurrentTarget() - getSetpointValue(config.coralTarget)) < 0.01
+        );
+
+        Command adjustElevator = Commands.either(
+            Commands.none(),
+            Commands.sequence(
+                Commands.runOnce(() -> {
+                    if (Math.abs(ElevatorSubsystem.getElevatorCurrentTarget() - ElevatorSubsystem.kAlgaeShootingPosition) < 1 &&
+                        config.elevatorTarget != Setpoint.kAlgaeShootingPosition &&
+                        (Math.abs(AlgaeSubsystem.getAlgaeRotationCurrentTarget() - AlgaeSubsystem.kStowedPosition) < 0.01 ||
+                         Math.abs(AlgaeSubsystem.getAlgaeRotationCurrentTarget() - AlgaeSubsystem.kShootingPosition) < 0.01)) {
+                        throw new IllegalStateException("Elevator cannot move from algae shooting until algae is not stowed or shooting");
+                    }
+                }).ignoringDisable(true),
+                Commands.either(
+                    ElevatorSubsystem.setSetpointCommand(config.elevatorTarget),
+                    Commands.waitUntil(() -> 
+                        CoralSubsystem.getCoralRotationCurrentTarget() != CoralSubsystem.kStartingPosition &&
+                        AlgaeSubsystem.getAlgaeRotationCurrentTarget() != AlgaeSubsystem.kStowedPosition &&
+                        AlgaeSubsystem.getAlgaeRotationCurrentTarget() != AlgaeSubsystem.kShootingPosition
+                    ).andThen(ElevatorSubsystem.setSetpointCommand(config.elevatorTarget)),
+                    () -> CoralSubsystem.getCoralRotationCurrentTarget() != CoralSubsystem.kStartingPosition &&
+                          AlgaeSubsystem.getAlgaeRotationCurrentTarget() != AlgaeSubsystem.kStowedPosition &&
+                          AlgaeSubsystem.getAlgaeRotationCurrentTarget() != AlgaeSubsystem.kShootingPosition
+                )
+            ),
+            () -> Math.abs(ElevatorSubsystem.getElevatorCurrentTarget() - getSetpointValue(config.elevatorTarget)) < 1
+        );
+
+        Command adjustAlgae = Commands.either(
+            Commands.none(),
+            Commands.sequence(
+                Commands.runOnce(() -> {
+                    if (config.algaeTarget == AlgaeSetpoint.kStowedPosition) {
+                        if (config.elevatorTarget != Setpoint.kStowedPosition ||
+                            ElevatorSubsystem.getElevatorCurrentTarget() != ElevatorSubsystem.kStowedPosition) {
+                            throw new IllegalStateException("Algae cannot move to stowed unless elevator is stowed");
+                        }
+                        if (AlgaeSubsystem.isAlgaeIntakeLoaded()) {
+                            throw new IllegalStateException("Algae cannot move to stowed when loaded");
+                        }
+                    }
+                }).ignoringDisable(true),
+                Commands.runOnce(() -> {
+                    if (config.algaeTarget == AlgaeSetpoint.kShootingPosition &&
+                        config.coralTarget == CoralSetpoint.kShootingPosition) {
+                        throw new IllegalStateException("Algae and coral cannot both be in shooting positions simultaneously");
+                    }
+                }).ignoringDisable(true),
+                Commands.either(
+                    Commands.none(),
+                    ElevatorSubsystem.setSetpointCommand(Setpoint.kAlgaeShootingPosition),
+                    () -> config.algaeTarget != AlgaeSetpoint.kShootingPosition ||
+                          Math.abs(ElevatorSubsystem.getElevatorCurrentTarget() - ElevatorSubsystem.kAlgaeShootingPosition) < 1
+                ),
+                AlgaeSubsystem.setSetpointCommand(config.algaeTarget)
+            ),
+            () -> Math.abs(AlgaeSubsystem.getAlgaeRotationCurrentTarget() - getSetpointValue(config.algaeTarget)) < 0.01
+        );
+
+        // Updated to replicate deadlineWith behavior without using it
+        return Commands.parallel(
+            adjustCoral,
+            Commands.sequence(
+                Commands.parallel(
+                    adjustElevator,
+                    adjustAlgae.withInterruptBehavior(Command.InterruptionBehavior.kCancelSelf)
+                ).until(() -> adjustElevator.isFinished()), // Ends when adjustElevator finishes
+                adjustAlgae.until(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationCurrentTarget() - getSetpointValue(config.algaeTarget)) < 0.01)
+            )
+        ).handleInterrupt(() -> System.out.println("State transition interrupted"));
+    }
+
+    private double getSetpointValue(Enum<?> setpoint) {
+        if (setpoint instanceof CoralSetpoint) {
+            return switch ((CoralSetpoint) setpoint) {
+                case kStartingPosition -> CoralSubsystem.kStartingPosition;
+                case kStowedPosition -> CoralSubsystem.kStowedPosition;
+                case kHumanPickupPosition -> CoralSubsystem.kHumanPickupPosition;
+                case kShootingPosition -> CoralSubsystem.kShootingPosition;
+            };
+        } else if (setpoint instanceof AlgaeSetpoint) {
+            return switch ((AlgaeSetpoint) setpoint) {
+                case kStowedPosition -> AlgaeSubsystem.kStowedPosition;
+                case kGroundPickupPosition -> AlgaeSubsystem.kGroundPickupPosition;
+                case kProcessorPosition -> AlgaeSubsystem.kProcessorPosition;
+                case kReefPickupPosition -> AlgaeSubsystem.kReefPickupPosition;
+                case kShootingPosition -> AlgaeSubsystem.kShootingPosition;
+            };
+        } else if (setpoint instanceof Setpoint) {
+            return switch ((Setpoint) setpoint) {
+                case kStowedPosition -> ElevatorSubsystem.kStowedPosition;
+                case kFeederStation -> ElevatorSubsystem.kFeederStation;
+                case kLevel1 -> ElevatorSubsystem.kLevel1;
+                case kLevel2 -> ElevatorSubsystem.kLevel2;
+                case kLevel3 -> ElevatorSubsystem.kLevel3;
+                case kLevel4 -> ElevatorSubsystem.kLevel4;
+                case kAlgaeShootingPosition -> ElevatorSubsystem.kAlgaeShootingPosition;
+            };
+        }
+        return 0;
     }
 
     public Command getAutonomousCommand() {
