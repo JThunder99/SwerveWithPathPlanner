@@ -6,17 +6,17 @@ package frc.robot;
 
 import frc.robot.subsystems.AlgaeSubsystem.AlgaeSetpoint;
 import frc.robot.subsystems.CoralSubsystem.CoralSetpoint;
-import frc.robot.subsystems.ElevatorSubsystem.Setpoint;
+import frc.robot.subsystems.ElevatorSubsystem.ElevatorSetpoint;
 
 public class RobotStateConfig {
     public final CoralSetpoint coralTarget;
     public final AlgaeSetpoint algaeTarget;
-    public final Setpoint elevatorTarget;
+    public final ElevatorSetpoint elevatorTarget;
 
     public RobotStateConfig(
         CoralSetpoint coralTarget,
         AlgaeSetpoint algaeTarget,
-        Setpoint elevatorTarget
+        ElevatorSetpoint elevatorTarget
     ) {
         this.coralTarget = coralTarget;
         this.algaeTarget = algaeTarget;
@@ -26,72 +26,66 @@ public class RobotStateConfig {
     public static final RobotStateConfig ALGAE_GROUND_PICKUP = new RobotStateConfig(
         CoralSetpoint.kStowedPosition,
         AlgaeSetpoint.kGroundPickupPosition,
-        Setpoint.kStowedPosition
+        ElevatorSetpoint.kGroundPosition
     );
 
     public static final RobotStateConfig ALGAE_PROCESSOR = new RobotStateConfig(
         CoralSetpoint.kStowedPosition,
         AlgaeSetpoint.kProcessorPosition,
-        Setpoint.kStowedPosition
+        ElevatorSetpoint.kStowedPosition
     );
 
     public static final RobotStateConfig ALGAE_REEF_LEVEL_1_PICKUP = new RobotStateConfig(
         CoralSetpoint.kStowedPosition,
         AlgaeSetpoint.kReefPickupPosition,
-        Setpoint.kLevel1
+        ElevatorSetpoint.kLevel1
     );
 
     public static final RobotStateConfig ALGAE_REEF_LEVEL_2_PICKUP = new RobotStateConfig(
         CoralSetpoint.kStowedPosition,
         AlgaeSetpoint.kReefPickupPosition,
-        Setpoint.kLevel2
+        ElevatorSetpoint.kLevel2
     );
 
     public static final RobotStateConfig ALGAE_SHOOTING = new RobotStateConfig(
         CoralSetpoint.kStowedPosition,
         AlgaeSetpoint.kShootingPosition,
-        Setpoint.kAlgaeShootingPosition
+        ElevatorSetpoint.kAlgaeShootingPosition
     );
 
     public static final RobotStateConfig CORAL_HUMAN_PICKUP = new RobotStateConfig(
         CoralSetpoint.kHumanPickupPosition,
         AlgaeSetpoint.kStowedPosition,
-        Setpoint.kStowedPosition
-    );
-
-    public static final RobotStateConfig CORAL_SHOOTING_FEEDER = new RobotStateConfig(
-        CoralSetpoint.kShootingPosition,
-        AlgaeSetpoint.kReefPickupPosition,
-        Setpoint.kFeederStation
+        ElevatorSetpoint.kStowedPosition
     );
 
     public static final RobotStateConfig CORAL_SHOOTING_LEVEL_1 = new RobotStateConfig(
         CoralSetpoint.kShootingPosition,
         AlgaeSetpoint.kReefPickupPosition,
-        Setpoint.kLevel1
+        ElevatorSetpoint.kLevel1
     );
 
     public static final RobotStateConfig CORAL_SHOOTING_LEVEL_2 = new RobotStateConfig(
         CoralSetpoint.kShootingPosition,
         AlgaeSetpoint.kReefPickupPosition,
-        Setpoint.kLevel2
+        ElevatorSetpoint.kLevel2
     );
 
     public static final RobotStateConfig CORAL_SHOOTING_LEVEL_3 = new RobotStateConfig(
         CoralSetpoint.kShootingPosition,
         AlgaeSetpoint.kReefPickupPosition,
-        Setpoint.kLevel3
+        ElevatorSetpoint.kLevel3
     );
 
     public static final RobotStateConfig CORAL_SHOOTING_LEVEL_4 = new RobotStateConfig(
         CoralSetpoint.kShootingPosition,
         AlgaeSetpoint.kReefPickupPosition,
-        Setpoint.kLevel4
+        ElevatorSetpoint.kLevel4
     );
 
     public static final RobotStateConfig ROBOT_STOWED = new RobotStateConfig(
         CoralSetpoint.kStowedPosition,
         AlgaeSetpoint.kStowedPosition,
-        Setpoint.kStowedPosition
+        ElevatorSetpoint.kStowedPosition
     );
 }

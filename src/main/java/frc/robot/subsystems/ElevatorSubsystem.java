@@ -35,6 +35,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   RelativeEncoder elevator1Encoder = elevator1.getExternalEncoder();
 
   public static final int kStowedPosition = 0;
+  public static final int kGroundPosition = 2;
   public static final int kFeederStation = 0;
   public static final int kLevel1 = 0;
   public static final int kLevel2 = 2;
@@ -43,8 +44,9 @@ public class ElevatorSubsystem extends SubsystemBase {
   public static final int kAlgaeShootingPosition = 9;
 
   /** Subsystem-wide setpoints */
-  public enum Setpoint {
+  public enum ElevatorSetpoint {
     kStowedPosition,
+    kGroundPosition,
     kFeederStation,
     kLevel1,
     kLevel2,
@@ -113,7 +115,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   //     elevatorCurrentTarget, ControlType.kMAXMotionPositionControl);
   // }
 
-  private void moveToSetpoint() {
+  private void moveElevatorToSetpoint() {
     // Clamp target to safe range based on limits
     if (elevator1.getReverseLimitSwitch().isPressed() && elevatorCurrentTarget < 0) {
       elevatorCurrentTarget = 0; // Don’t go below bottom
@@ -160,12 +162,15 @@ public class ElevatorSubsystem extends SubsystemBase {
    * Command to set the subsystem setpoint. This will set the elevator to the predefined
    * position for the given setpoint.
    */
-  public Command setSetpointCommand(Setpoint setpoint) {
+  public Command setSetpointCommand(ElevatorSetpoint elevatorSetpoint) {
     return this.runOnce(
         () -> {
-          switch (setpoint) {
+          switch (elevatorSetpoint) {
             case kStowedPosition:
               elevatorCurrentTarget = kStowedPosition;
+              break;
+            case kGroundPosition:
+              elevatorCurrentTarget = kGroundPosition;
               break;
             case kFeederStation:
               elevatorCurrentTarget = kFeederStation;
@@ -192,7 +197,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    moveToSetpoint();
+    moveElevatorToSetpoint();
     zeroElevatorOnLimitSwitch();
     zeroOnUserButton();
     SmartDashboard.putBoolean("Rev Intake Top Limit Switch",elevator1.getForwardLimitSwitch().isPressed());
@@ -204,19 +209,21 @@ public class ElevatorSubsystem extends SubsystemBase {
   public Map<String, Command> getNamedCommands() {
     return Map.of(
       "Set_Elevator_Setpoint_Stowed",
-      setSetpointCommand(Setpoint.kStowedPosition),
+      setSetpointCommand(ElevatorSetpoint.kStowedPosition),
+      "Set_Elevator_Setpoint_Ground",
+      setSetpointCommand(ElevatorSetpoint.kGroundPosition),
       "Set_Elevator_Setpoint_FeederStation",
-      setSetpointCommand(Setpoint.kFeederStation),
+      setSetpointCommand(ElevatorSetpoint.kFeederStation),
       "Set_Elevator_Setpoint_Level1",
-      setSetpointCommand(Setpoint.kLevel1),
+      setSetpointCommand(ElevatorSetpoint.kLevel1),
       "Set_Elevator_Setpoint_Level2",
-      setSetpointCommand(Setpoint.kLevel2),
+      setSetpointCommand(ElevatorSetpoint.kLevel2),
       "Set_Elevator_Setpoint_Level3",
-      setSetpointCommand(Setpoint.kLevel3),
+      setSetpointCommand(ElevatorSetpoint.kLevel3),
       "Set_Elevator_Setpoint_Level4",
-      setSetpointCommand(Setpoint.kLevel4),
+      setSetpointCommand(ElevatorSetpoint.kLevel4),
       "Set_Elevator_Setpoint_AlgaeShootingPosition",
-      setSetpointCommand(Setpoint.kAlgaeShootingPosition)
+      setSetpointCommand(ElevatorSetpoint.kAlgaeShootingPosition)
     );
   }
 }

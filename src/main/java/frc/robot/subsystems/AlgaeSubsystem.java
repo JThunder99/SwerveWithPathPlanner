@@ -129,7 +129,7 @@ public class AlgaeSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("Intake/MotorOutput", algaeIntakeMotor.get());
 
-    SmartDashboard.putBoolean("Is Intake Loaded", isAlgaeIntakeLoaded());
+    SmartDashboard.putBoolean("Is Algae Intake Loaded", isAlgaeIntakeLoaded());
 
     SmartDashboard.putNumber("Intake Load Sensor Distance", algaeIntakeLoadSensor.getDistance().getValueAsDouble());
 
@@ -137,9 +137,9 @@ public class AlgaeSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Algae Actual Position", algaeRotationEncoder.getPosition());
 
     // Check if the algae intake is loaded and set the hold power
-    if (isAlgaeIntakeLoaded()) {
-      holdAlgaeIntake();
-    }
+    // if (isAlgaeIntakeLoaded()) {
+    //   holdAlgaeIntake();
+    // }
   }
 
   /**
@@ -153,14 +153,14 @@ public class AlgaeSubsystem extends SubsystemBase {
    * Sets the rollers to pick up a game piece at half speed
    */
   public Command pickUpGamePieceCommand() {
-    return Commands.runOnce(() -> runIntake(.5));
+    return Commands.runOnce(() -> runIntake(.1));
   }
 
   /**
    * Sets the rollers to eject a game piece at half speed
    */
   public Command ejectGamePieceCommand() {
-    return Commands.runOnce(() -> runIntake(-.5));
+    return Commands.runOnce(() -> runIntake(-.1));
   }
 
   /**
