@@ -61,7 +61,7 @@ public class RobotStateConfig {
 
     public static final RobotStateConfig CORAL_SHOOTING_LEVEL_1 = new RobotStateConfig(
         CoralSetpoint.kShootingPosition,
-        AlgaeSetpoint.kReefPickupPosition,
+        AlgaeSetpoint.kStowedPosition,
         ElevatorSetpoint.kLevel1
     );
 

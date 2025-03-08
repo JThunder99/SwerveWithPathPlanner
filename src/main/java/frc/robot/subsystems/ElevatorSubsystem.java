@@ -35,13 +35,13 @@ public class ElevatorSubsystem extends SubsystemBase {
   RelativeEncoder elevator1Encoder = elevator1.getExternalEncoder();
 
   public static final int kStowedPosition = 0;
-  public static final int kGroundPosition = 2;
+  public static final int kGroundPosition = 7;
   public static final int kFeederStation = 0;
   public static final int kLevel1 = 0;
-  public static final int kLevel2 = 2;
-  public static final int kLevel3 = 5;
-  public static final int kLevel4 = 7;
-  public static final int kAlgaeShootingPosition = 9;
+  public static final int kLevel2 = 10;
+  public static final int kLevel3 = 15;
+  public static final int kLevel4 = 20;
+  public static final int kAlgaeShootingPosition = 20;
 
   /** Subsystem-wide setpoints */
   public enum ElevatorSetpoint {
@@ -98,6 +98,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public double getElevatorCurrentTarget() {
     return elevatorCurrentTarget;
+  }
+
+  public double getElevatorPosition() {
+    return elevator1Encoder.getPosition();
   }
 
   //#region Control Methods
@@ -200,8 +204,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     moveElevatorToSetpoint();
     zeroElevatorOnLimitSwitch();
     zeroOnUserButton();
-    SmartDashboard.putBoolean("Rev Intake Top Limit Switch",elevator1.getForwardLimitSwitch().isPressed());
-    SmartDashboard.putBoolean("Rev Intake Bottom Limit Switch",elevator1.getReverseLimitSwitch().isPressed());
+    SmartDashboard.putBoolean("Elevator Top Limit Switch",elevator1.getForwardLimitSwitch().isPressed());
+    SmartDashboard.putBoolean("Elevator Bottom Limit Switch",elevator1.getReverseLimitSwitch().isPressed());
     SmartDashboard.putNumber("Elevator Target Position", elevatorCurrentTarget);
     SmartDashboard.putNumber("Elevator Actual Position", elevator1Encoder.getPosition());
   }

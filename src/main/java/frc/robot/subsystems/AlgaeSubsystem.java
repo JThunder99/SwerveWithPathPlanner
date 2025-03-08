@@ -27,7 +27,7 @@ public class AlgaeSubsystem extends SubsystemBase {
   SparkFlex algaeIntakeMotor = new SparkFlex(13, MotorType.kBrushless);
   SparkFlex algaeIntakeRotationMotor = new SparkFlex(14, MotorType.kBrushless);
 
-  SparkFlexConfig algaeMotorConfig = new SparkFlexConfig();
+  SparkFlexConfig algaeIntakeMotorConfig = new SparkFlexConfig();
   SparkFlexConfig algaeRotationMotorConfig = new SparkFlexConfig();
 
   SparkClosedLoopController algaeRotationLoopController = algaeIntakeRotationMotor.getClosedLoopController();
@@ -56,14 +56,14 @@ public class AlgaeSubsystem extends SubsystemBase {
 
     algaeIntakeLoadSensor.getConfigurator().apply(new CANrangeConfiguration());
 
-    algaeMotorConfig
+    algaeIntakeMotorConfig
     .inverted(false)
     .idleMode(IdleMode.kBrake);
 
-    algaeIntakeMotor.configure(algaeMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    algaeIntakeMotor.configure(algaeIntakeMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     algaeRotationMotorConfig
-    .inverted(false)
+    .inverted(true)
     .idleMode(IdleMode.kBrake);
 
     algaeRotationMotorConfig.encoder
@@ -92,6 +92,10 @@ public class AlgaeSubsystem extends SubsystemBase {
 
   public double getAlgaeRotationCurrentTarget() {
     return algaeRotationCurrentTarget;
+  }
+
+  public double getAlgaeRotationPosition() {
+    return algaeRotationEncoder.getPosition();
   }
 
   //#region Control Methods
@@ -127,11 +131,11 @@ public class AlgaeSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     moveToSetpoint();
 
-    SmartDashboard.putNumber("Intake/MotorOutput", algaeIntakeMotor.get());
+    SmartDashboard.putNumber("Algae Intake Motor Output", algaeIntakeMotor.get());
 
     SmartDashboard.putBoolean("Is Algae Intake Loaded", isAlgaeIntakeLoaded());
 
-    SmartDashboard.putNumber("Intake Load Sensor Distance", algaeIntakeLoadSensor.getDistance().getValueAsDouble());
+    SmartDashboard.putNumber("Algae Intake Load Sensor Distance", algaeIntakeLoadSensor.getDistance().getValueAsDouble());
 
     SmartDashboard.putNumber("Algae Target Position", algaeRotationCurrentTarget);
     SmartDashboard.putNumber("Algae Actual Position", algaeRotationEncoder.getPosition());

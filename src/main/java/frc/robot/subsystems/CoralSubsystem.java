@@ -96,6 +96,10 @@ public class CoralSubsystem extends SubsystemBase {
     return coralRotationCurrentTarget;
   }
 
+  public double getCoralRotationPosition() {
+    return coralRotationEncoder.getPosition();
+  }
+
   //#region Control Methods
 
   public boolean isCoralIntakeLoaded() {
@@ -131,7 +135,7 @@ public class CoralSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     moveCoralToSetpoint();
 
-    SmartDashboard.putNumber("Coral Intake/MotorOutput", coralIntakeMotor.get());
+    SmartDashboard.putNumber("Coral Intake Motor Output", coralIntakeMotor.get());
 
     SmartDashboard.putBoolean("Is Coral Intake Loaded", isCoralIntakeLoaded());
 
@@ -141,9 +145,9 @@ public class CoralSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Coral Actual Position", coralRotationEncoder.getPosition());
 
     // Check if the coral intake is loaded and set the hold power
-    if (isCoralIntakeLoaded()) {
-      holdCoralIntake();
-    }
+    // if (isCoralIntakeLoaded()) {
+    //   holdCoralIntake();
+    // }
   }
 
   //#region Commands
