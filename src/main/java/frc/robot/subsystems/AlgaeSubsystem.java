@@ -50,7 +50,9 @@ public class AlgaeSubsystem extends SubsystemBase {
 
   private double algaeRotationCurrentTarget = kStowedPosition;
 
-  private CANrange algaeIntakeLoadSensor = new CANrange(20);
+  public final CANrange algaeIntakeLoadSensor = new CANrange(20);
+
+  private boolean isLoadedLocked = false; // Track loaded state
 
   public AlgaeSubsystem() {
 
@@ -88,6 +90,16 @@ public class AlgaeSubsystem extends SubsystemBase {
     algaeIntakeRotationMotor.configure(algaeRotationMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     algaeRotationEncoder.setPosition(0);
+    //algaeRotationCurrentTarget = kReefPickupPosition;
+    moveToSetpoint();
+  }
+
+  public void setLoadedLocked(boolean loaded) {
+    isLoadedLocked = loaded;
+  }
+
+  public boolean getLoadedLocked() {
+    return isLoadedLocked;
   }
 
   public double getAlgaeRotationCurrentTarget() {
@@ -140,6 +152,8 @@ public class AlgaeSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Algae Target Position", algaeRotationCurrentTarget);
     SmartDashboard.putNumber("Algae Actual Position", algaeRotationEncoder.getPosition());
 
+    //System.out.println("Algae periodic setpoint: " + algaeRotationCurrentTarget);
+
     // Check if the algae intake is loaded and set the hold power
     // if (isAlgaeIntakeLoaded()) {
     //   holdAlgaeIntake();
@@ -178,28 +192,79 @@ public class AlgaeSubsystem extends SubsystemBase {
    * Command to set the subsystem setpoint. This will set the algae claw to the predefined
    * position for the given setpoint.
    */
-  public Command setSetpointCommand(AlgaeSetpoint algaesetpoint) {
-    return this.runOnce(
-        () -> {
-          switch (algaesetpoint) {
-            case kStowedPosition:
-            algaeRotationCurrentTarget = kStowedPosition;
-              break;
-            case kGroundPickupPosition:
-            algaeRotationCurrentTarget = kGroundPickupPosition;
-              break;
-            case kProcessorPosition:
-              algaeRotationCurrentTarget = kProcessorPosition;
-                break;
-            case kReefPickupPosition:
-            algaeRotationCurrentTarget = kReefPickupPosition;
-              break;
-            case kShootingPosition:
-            algaeRotationCurrentTarget = kShootingPosition;
-              break;
-          }
+  // public Command setSetpointCommand(AlgaeSetpoint algaesetpoint) {
+  //   return this.runOnce(
+  //       () -> {
+  //         switch (algaesetpoint) {
+  //           case kStowedPosition:
+  //           algaeRotationCurrentTarget = kStowedPosition;
+  //             break;
+  //           case kGroundPickupPosition:
+  //           algaeRotationCurrentTarget = kGroundPickupPosition;
+  //             break;
+  //           case kProcessorPosition:
+  //             algaeRotationCurrentTarget = kProcessorPosition;
+  //               break;
+  //           case kReefPickupPosition:
+  //           algaeRotationCurrentTarget = kReefPickupPosition;
+  //             break;
+  //           case kShootingPosition:
+  //           algaeRotationCurrentTarget = kShootingPosition;
+  //             break;
+  //         }
+  //       });
+  // }
+
+  public Command setSetpointCommand(AlgaeSetpoint algaesetpoint, boolean continuous) {
+    if (continuous) {
+        return Commands.run(() -> {
+            switch (algaesetpoint) {
+                case kStowedPosition:
+                    algaeRotationCurrentTarget = kStowedPosition;
+                    break;
+                case kGroundPickupPosition:
+                    algaeRotationCurrentTarget = kGroundPickupPosition;
+                    break;
+                case kProcessorPosition:
+                    algaeRotationCurrentTarget = kProcessorPosition;
+                    break;
+                case kReefPickupPosition:
+                    algaeRotationCurrentTarget = kReefPickupPosition;
+                    break;
+                case kShootingPosition:
+                    algaeRotationCurrentTarget = kShootingPosition;
+                    break;
+            }
+            moveToSetpoint();
+        }, this);
+    } else {
+        return runOnce(() -> {
+            switch (algaesetpoint) {
+                case kStowedPosition:
+                    algaeRotationCurrentTarget = kStowedPosition;
+                    break;
+                case kGroundPickupPosition:
+                    algaeRotationCurrentTarget = kGroundPickupPosition;
+                    break;
+                case kProcessorPosition:
+                    algaeRotationCurrentTarget = kProcessorPosition;
+                    break;
+                case kReefPickupPosition:
+                    algaeRotationCurrentTarget = kReefPickupPosition;
+                    break;
+                case kShootingPosition:
+                    algaeRotationCurrentTarget = kShootingPosition;
+                    break;
+            }
+            moveToSetpoint();
         });
-  }
+    }
+}
+
+// Overload for default (non-continuous)
+public Command setSetpointCommand(AlgaeSetpoint algaesetpoint) {
+  return setSetpointCommand(algaesetpoint, false);
+}
 
   public Map<String, Command> getNamedCommands() {
     return Map.of(
