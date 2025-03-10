@@ -58,13 +58,13 @@ public class CoralSubsystem extends SubsystemBase {
     coralIntakeLoadSensor.getConfigurator().apply(new CANrangeConfiguration());
 
     coralMotorConfig
-    .inverted(false)
+    .inverted(true)
     .idleMode(IdleMode.kBrake);
 
     coralIntakeMotor.configure(coralMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     coralRotationMotorConfig
-    .inverted(false)
+    .inverted(true)
     .idleMode(IdleMode.kBrake);
 
     coralRotationMotorConfig.encoder
@@ -154,7 +154,7 @@ public class CoralSubsystem extends SubsystemBase {
    * Sets the rollers to pick up a game piece at half speed
    */
   public Command pickUpCoralCommand() {
-    return Commands.startEnd(() -> runCoralIntake(.5), () -> {}, this) // No stop action—default command handles it
+    return Commands.startEnd(() -> runCoralIntake(.1), () -> {}, this) // No stop action—default command handles it
             .withName("PickUpCoral");
   }
 
@@ -162,7 +162,7 @@ public class CoralSubsystem extends SubsystemBase {
    * Sets the rollers to eject a game piece at half speed
    */
   public Command ejectCoralCommand() {
-    return Commands.startEnd(() -> runCoralIntake(-.5), () -> {}, this) // No stop action—default command handles it
+    return Commands.startEnd(() -> runCoralIntake(-.1), () -> {}, this) // No stop action—default command handles it
             .withName("EjectCoral");
   }
 
