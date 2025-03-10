@@ -5,21 +5,15 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
-
-import java.util.Set;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.revrobotics.spark.SparkBase.ControlType;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -69,6 +63,32 @@ public class RobotContainer {
         ElevatorSubsystem = new ElevatorSubsystem();
         CoralSubsystem = new CoralSubsystem();
         CANdleSubsystem = new CANdleSubsystem(AlgaeSubsystem, CoralSubsystem);
+
+        // Default command for AlgaeSubsystem
+        AlgaeSubsystem.setDefaultCommand(
+            Commands.run(() -> {
+                if (AlgaeSubsystem.isAlgaeIntakeLoaded()) {
+                    AlgaeSubsystem.holdAlgaeIntake();
+                    SmartDashboard.putString("Algae Default State", "Holding");
+                } else {
+                    AlgaeSubsystem.algaeIntakeMotor.stopMotor();
+                    SmartDashboard.putString("Algae Default State", "Stopped");
+                }
+            }, AlgaeSubsystem).withName("AlgaeDefaultHold")
+        );
+
+        // Default command for CoralSubsystem
+        CoralSubsystem.setDefaultCommand(
+            Commands.run(() -> {
+                if (CoralSubsystem.isCoralIntakeLoaded()) {
+                    CoralSubsystem.holdCoralIntake();
+                    SmartDashboard.putString("Coral Default State", "Holding");
+                } else {
+                    CoralSubsystem.coralIntakeMotor.stopMotor();
+                    SmartDashboard.putString("Coral Default State", "Stopped");
+                }
+            }, CoralSubsystem).withName("CoralDefaultHold")
+        );
 
         // Register the named commands from each subsystem that may be used in PathPlanner
         //NamedCommands.registerCommands(Drivetrain.getNamedCommands());
@@ -124,44 +144,11 @@ public class RobotContainer {
     }
 
     private void configureOperatorControls() {
-        // Configure your button bindings here
-        // joystick1.a().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(0.1))
-        // .onFalse(AlgaeIntakeSubsystem.stopIntakeAtSpeedCommand());
-        
-        // joystick1.b().whileTrue(AlgaeIntakeSubsystem.runIntakeAtSpeedCommand(-0.1))
-        // .onFalse(AlgaeIntakeSubsystem.stopIntakeAtSpeedCommand());
-
-        // joystick1.y().whileTrue(ElevatorSubsystem.setElevatorSpeedCommand(0.1))
-        // .onFalse(ElevatorSubsystem.stopElevatorSpeedCommand());
-
-        // joystick1.x().whileTrue(ElevatorSubsystem.setElevatorSpeedCommand(-0.1))
-        // .onFalse(ElevatorSubsystem.stopElevatorSpeedCommand());
-
-        // // B Button -> Elevator/Arm to level 2 position
-        // joystick1.b().onTrue(ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kFeederStation));
-
-        //  // A Button -> Elevator/Arm to level 2 position
-        //  joystick1.a().onTrue(ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kLevel2));
-
-        // // X Button -> Elevator/Arm to level 3 position
-        // joystick1.x().onTrue(ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kLevel3));
-
-        // // Y Button -> Elevator/Arm to level 4 position
-        // joystick1.y().onTrue(ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kLevel4));
-
-        // joystick1.povLeft().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kStowedPosition));
-
-        // joystick1.povDown().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kGroundPickupPosition));
-
-        // joystick1.povRight().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kReefPickupPosition));
-
-        // joystick1.povUp().onTrue(AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kShootingPosition));
-
         // Modifier buttons
         Trigger algaeModifier = operatorControl.button(1); // Algae modifier button
         Trigger coralModifier = operatorControl.button(2); // Coral modifier button
 
-        // Scenario buttons (2-6 for 10 scenarios)
+        // Scenario buttons (3-7 for 10 scenarios)
         operatorControl.button(3).and(algaeModifier).onTrue(transitionToStateCommand(RobotStateConfig.ALGAE_GROUND_PICKUP));
         operatorControl.button(3).and(coralModifier).onTrue(transitionToStateCommand(RobotStateConfig.CORAL_HUMAN_PICKUP));
 
@@ -177,23 +164,15 @@ public class RobotContainer {
         operatorControl.button(7).and(algaeModifier).onTrue(transitionToStateCommand(RobotStateConfig.ALGAE_SHOOTING));
         operatorControl.button(7).and(coralModifier).onTrue(transitionToStateCommand(RobotStateConfig.CORAL_SHOOTING_LEVEL_4));
 
-        // Intake control buttons (7-8 for 4 intake commands)
-        operatorControl.button(8).and(algaeModifier).onTrue(AlgaeSubsystem.pickUpGamePieceCommand())
-        .onFalse(AlgaeSubsystem.stopIntakeAtSpeedCommand()); // Algae Pickup
-        operatorControl.button(8).and(coralModifier).onTrue(CoralSubsystem.pickUpCoralCommand())
-        .onFalse(CoralSubsystem.stopCoralIntakeAtSpeedCommand());     // Coral Pickup
+        // Intake control buttons (8-9 for 4 intake commands)
+        operatorControl.button(8).and(algaeModifier).whileTrue(AlgaeSubsystem.pickUpGamePieceCommand());
+        operatorControl.button(8).and(coralModifier).whileTrue(CoralSubsystem.pickUpCoralCommand());
 
-        operatorControl.button(9).and(algaeModifier).onTrue(AlgaeSubsystem.ejectGamePieceCommand())
-        .onFalse(AlgaeSubsystem.stopIntakeAtSpeedCommand());  // Algae Eject
-        operatorControl.button(9).and(coralModifier).onTrue(CoralSubsystem.ejectCoralCommand())
-        .onFalse(CoralSubsystem.stopCoralIntakeAtSpeedCommand());      // Coral Eject
+        operatorControl.button(9).and(algaeModifier).whileTrue(AlgaeSubsystem.ejectGamePieceCommand());
+        operatorControl.button(9).and(coralModifier).whileTrue(CoralSubsystem.ejectCoralCommand());
 
         // Dedicated Stow button
         operatorControl.button(10).onTrue(transitionToStateCommand(RobotStateConfig.ROBOT_STOWED));
-
-        operatorControl.button(11).whileTrue(AlgaeSubsystem.runIntakeAtSpeedCommand(0.1))
-        .onFalse(AlgaeSubsystem.stopIntakeAtSpeedCommand());
-
     }
 
     /**

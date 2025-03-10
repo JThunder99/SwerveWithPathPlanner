@@ -26,7 +26,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 public class CoralSubsystem extends SubsystemBase {
   /** Creates a new CoralSubsystem. */
 
-  SparkMax coralIntakeMotor = new SparkMax(15, MotorType.kBrushless);
+  public SparkMax coralIntakeMotor = new SparkMax(15, MotorType.kBrushless);
   SparkFlex coralIntakeRotationMotor = new SparkFlex(16, MotorType.kBrushless);
 
   SparkMaxConfig coralMotorConfig = new SparkMaxConfig();
@@ -107,20 +107,14 @@ public class CoralSubsystem extends SubsystemBase {
     double distance = coralIntakeLoadSensor.getDistance().getValueAsDouble();
     boolean isDetected = coralIntakeLoadSensor.getIsDetected().getValue();
     return distance < .1 && isDetected == true; // Adjust the threshold value as needed
-}
-
-// public double intakeLoadDistance() {
-//   // Distance value from intake load sensor
-//   double distance = intakeLoadSensor.getDistance().getValueAsDouble();
-//   return distance;
-// }
+  }
 
   public void runCoralIntake(double speed) {
     coralIntakeMotor.set(speed);
   }
 
   public void holdCoralIntake() {
-    coralIntakeMotor.set(0.1); // Adjust the hold power as needed
+    coralIntakeMotor.set(0.15); // Adjust the hold power as needed
   }
 
   private void moveCoralToSetpoint() {
@@ -135,19 +129,15 @@ public class CoralSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     moveCoralToSetpoint();
 
+    // Debug current command state
+    Command currentCmd = this.getCurrentCommand();
+    SmartDashboard.putString("Coral Current Command", currentCmd != null ? currentCmd.getName() : "None");
     SmartDashboard.putNumber("Coral Intake Motor Output", coralIntakeMotor.get());
-
     SmartDashboard.putBoolean("Is Coral Intake Loaded", isCoralIntakeLoaded());
-
     SmartDashboard.putNumber("Coral Intake Load Sensor Distance", coralIntakeLoadSensor.getDistance().getValueAsDouble());
-
     SmartDashboard.putNumber("Coral Target Position", coralRotationCurrentTarget);
     SmartDashboard.putNumber("Coral Actual Position", coralRotationEncoder.getPosition());
 
-    // Check if the coral intake is loaded and set the hold power
-    // if (isCoralIntakeLoaded()) {
-    //   holdCoralIntake();
-    // }
   }
 
   //#region Commands
@@ -156,28 +146,31 @@ public class CoralSubsystem extends SubsystemBase {
    * Sets the rollers at set speed
    */
   public Command runCoralIntakeAtSpeedCommand(double speed) {
-    return Commands.runOnce(() -> runCoralIntake(speed));
+    return Commands.startEnd(() -> runCoralIntake(speed), () -> coralIntakeMotor.stopMotor(), this)
+            .withName("RunCoralIntakeAtSpeed");
   }
 
   /**
    * Sets the rollers to pick up a game piece at half speed
    */
   public Command pickUpCoralCommand() {
-    return Commands.runOnce(() -> runCoralIntake(.5));
+    return Commands.startEnd(() -> runCoralIntake(.5), () -> {}, this) // No stop action—default command handles it
+            .withName("PickUpCoral");
   }
 
   /**
    * Sets the rollers to eject a game piece at half speed
    */
   public Command ejectCoralCommand() {
-    return Commands.runOnce(() -> runCoralIntake(-.5));
+    return Commands.startEnd(() -> runCoralIntake(-.5), () -> {}, this) // No stop action—default command handles it
+            .withName("EjectCoral");
   }
 
   /**
    * Stops the intake motors
    */
   public Command stopCoralIntakeAtSpeedCommand() {
-    return Commands.runOnce(() -> coralIntakeMotor.stopMotor());
+    return Commands.runOnce(() -> coralIntakeMotor.stopMotor()).withName("StopCoralIntake");
   }
 
   /**
