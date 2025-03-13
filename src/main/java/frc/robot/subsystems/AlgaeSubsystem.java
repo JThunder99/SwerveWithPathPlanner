@@ -24,10 +24,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class AlgaeSubsystem extends SubsystemBase {
   /** Creates a new IntakeSubsystem. */
-  SparkFlex algaeIntakeMotor = new SparkFlex(13, MotorType.kBrushless);
+  public SparkFlex algaeIntakeMotor = new SparkFlex(13, MotorType.kBrushless);
   SparkFlex algaeIntakeRotationMotor = new SparkFlex(14, MotorType.kBrushless);
 
-  SparkFlexConfig algaeMotorConfig = new SparkFlexConfig();
+  SparkFlexConfig algaeIntakeMotorConfig = new SparkFlexConfig();
   SparkFlexConfig algaeRotationMotorConfig = new SparkFlexConfig();
 
   SparkClosedLoopController algaeRotationLoopController = algaeIntakeRotationMotor.getClosedLoopController();
@@ -50,20 +50,22 @@ public class AlgaeSubsystem extends SubsystemBase {
 
   private double algaeRotationCurrentTarget = kStowedPosition;
 
-  private CANrange algaeIntakeLoadSensor = new CANrange(20);
+  public final CANrange algaeIntakeLoadSensor = new CANrange(20);
+
+  private boolean isLoadedLocked = false; // Track loaded state
 
   public AlgaeSubsystem() {
 
     algaeIntakeLoadSensor.getConfigurator().apply(new CANrangeConfiguration());
 
-    algaeMotorConfig
+    algaeIntakeMotorConfig
     .inverted(false)
     .idleMode(IdleMode.kBrake);
 
-    algaeIntakeMotor.configure(algaeMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+    algaeIntakeMotor.configure(algaeIntakeMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     algaeRotationMotorConfig
-    .inverted(false)
+    .inverted(true)
     .idleMode(IdleMode.kBrake);
 
     algaeRotationMotorConfig.encoder
@@ -88,6 +90,24 @@ public class AlgaeSubsystem extends SubsystemBase {
     algaeIntakeRotationMotor.configure(algaeRotationMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     algaeRotationEncoder.setPosition(0);
+
+    moveToSetpoint();
+  }
+
+  public void setLoadedLocked(boolean loaded) {
+    isLoadedLocked = loaded;
+  }
+
+  public boolean getLoadedLocked() {
+    return isLoadedLocked;
+  }
+
+  public double getAlgaeRotationCurrentTarget() {
+    return algaeRotationCurrentTarget;
+  }
+
+  public double getAlgaeRotationPosition() {
+    return algaeRotationEncoder.getPosition();
   }
 
   //#region Control Methods
@@ -99,18 +119,12 @@ public class AlgaeSubsystem extends SubsystemBase {
     return distance < .1 && isDetected == true; // Adjust the threshold value as needed
 }
 
-// public double intakeLoadDistance() {
-//   // Distance value from intake load sensor
-//   double distance = intakeLoadSensor.getDistance().getValueAsDouble();
-//   return distance;
-// }
-
   public void runIntake(double speed) {
     algaeIntakeMotor.set(speed);
   }
 
   public void holdAlgaeIntake() {
-    algaeIntakeMotor.set(0.1); // Adjust the hold power as needed
+    algaeIntakeMotor.set(0.05); // Adjust the hold power as needed
   }
 
   private void moveToSetpoint() {
@@ -123,75 +137,97 @@ public class AlgaeSubsystem extends SubsystemBase {
     // This method will be called once per scheduler run
     moveToSetpoint();
 
-    SmartDashboard.putNumber("Intake/MotorOutput", algaeIntakeMotor.get());
-
-    SmartDashboard.putBoolean("Is Intake Loaded", isAlgaeIntakeLoaded());
-
-    SmartDashboard.putNumber("Intake Load Sensor Distance", algaeIntakeLoadSensor.getDistance().getValueAsDouble());
-
+    // Debug current command state
+    Command currentCmd = this.getCurrentCommand();
+    SmartDashboard.putString("Algae Current Command", currentCmd != null ? currentCmd.getName() : "None");
+    SmartDashboard.putNumber("Algae Intake Motor Output", algaeIntakeMotor.get());
+    SmartDashboard.putBoolean("Is Algae Intake Loaded", isAlgaeIntakeLoaded());
+    SmartDashboard.putNumber("Algae Intake Load Sensor Distance", algaeIntakeLoadSensor.getDistance().getValueAsDouble());
     SmartDashboard.putNumber("Algae Target Position", algaeRotationCurrentTarget);
     SmartDashboard.putNumber("Algae Actual Position", algaeRotationEncoder.getPosition());
-
-    // Check if the algae intake is loaded and set the hold power
-    if (isAlgaeIntakeLoaded()) {
-      holdAlgaeIntake();
-    }
   }
 
   /**
    * Sets the rollers at set speed
    */
   public Command runIntakeAtSpeedCommand(double speed) {
-    return Commands.runOnce(() -> runIntake(speed));
+    return Commands.startEnd(() -> runIntake(speed), () -> algaeIntakeMotor.stopMotor(), this)
+            .withName("RunIntakeAtSpeed");
   }
 
   /**
    * Sets the rollers to pick up a game piece at half speed
    */
   public Command pickUpGamePieceCommand() {
-    return Commands.runOnce(() -> runIntake(.5));
+    return Commands.startEnd(() -> runIntake(.1), () -> {}, this) // No stop action—default command handles it
+            .withName("PickUpAlgae");
   }
 
   /**
    * Sets the rollers to eject a game piece at half speed
    */
   public Command ejectGamePieceCommand() {
-    return Commands.runOnce(() -> runIntake(-.5));
+    return Commands.startEnd(() -> runIntake(-.1), () -> {}, this) // No stop action—default command handles it
+            .withName("EjectAlgae");
   }
 
   /**
    * Stops the intake motors
    */
   public Command stopIntakeAtSpeedCommand() {
-    return Commands.runOnce(() -> algaeIntakeMotor.stopMotor());
+    return Commands.runOnce(() -> algaeIntakeMotor.stopMotor()).withName("StopAlgaeIntake");
   }
 
-  /**
-   * Command to set the subsystem setpoint. This will set the algae claw to the predefined
-   * position for the given setpoint.
-   */
-  public Command setSetpointCommand(AlgaeSetpoint algaesetpoint) {
-    return this.runOnce(
-        () -> {
-          switch (algaesetpoint) {
-            case kStowedPosition:
-            algaeRotationCurrentTarget = kStowedPosition;
-              break;
-            case kGroundPickupPosition:
-            algaeRotationCurrentTarget = kGroundPickupPosition;
-              break;
-            case kProcessorPosition:
-              algaeRotationCurrentTarget = kProcessorPosition;
-                break;
-            case kReefPickupPosition:
-            algaeRotationCurrentTarget = kReefPickupPosition;
-              break;
-            case kShootingPosition:
-            algaeRotationCurrentTarget = kShootingPosition;
-              break;
-          }
+  public Command setSetpointCommand(AlgaeSetpoint algaesetpoint, boolean continuous) {
+    if (continuous) {
+        return Commands.run(() -> {
+            switch (algaesetpoint) {
+                case kStowedPosition:
+                    algaeRotationCurrentTarget = kStowedPosition;
+                    break;
+                case kGroundPickupPosition:
+                    algaeRotationCurrentTarget = kGroundPickupPosition;
+                    break;
+                case kProcessorPosition:
+                    algaeRotationCurrentTarget = kProcessorPosition;
+                    break;
+                case kReefPickupPosition:
+                    algaeRotationCurrentTarget = kReefPickupPosition;
+                    break;
+                case kShootingPosition:
+                    algaeRotationCurrentTarget = kShootingPosition;
+                    break;
+            }
+            moveToSetpoint();
+        }, this);
+    } else {
+        return runOnce(() -> {
+            switch (algaesetpoint) {
+                case kStowedPosition:
+                    algaeRotationCurrentTarget = kStowedPosition;
+                    break;
+                case kGroundPickupPosition:
+                    algaeRotationCurrentTarget = kGroundPickupPosition;
+                    break;
+                case kProcessorPosition:
+                    algaeRotationCurrentTarget = kProcessorPosition;
+                    break;
+                case kReefPickupPosition:
+                    algaeRotationCurrentTarget = kReefPickupPosition;
+                    break;
+                case kShootingPosition:
+                    algaeRotationCurrentTarget = kShootingPosition;
+                    break;
+            }
+            moveToSetpoint();
         });
-  }
+    }
+}
+
+// Overload for default (non-continuous)
+public Command setSetpointCommand(AlgaeSetpoint algaesetpoint) {
+  return setSetpointCommand(algaesetpoint, false);
+}
 
   public Map<String, Command> getNamedCommands() {
     return Map.of(
