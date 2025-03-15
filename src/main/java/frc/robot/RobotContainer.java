@@ -177,266 +177,141 @@ public class RobotContainer {
 
     /**
      * Transitions the robot to a specified state configuration, enforcing subsystem rules.
-     * - Coral: Adjusted first to avoid interference (R1: elevator position, R3: algae position).
-     * - Algae Safe: Moves algae to a safe intermediate position (0.5) to prevent Rule R1 violations.
-     * - Elevator: Adjusted third, ensuring algae is safe (R1: algae position if at shooting height).
-     * - Algae Target: Final adjustment with Rule R2 (no stow if loaded) and Rule R3 (coral position).
+     * - Coral: Adjusted to stowed first, then to final position after elevator/algae (R1: no starting pos when elevator moves, R2: no starting pos if loaded).
+     * - Algae Safe: Moves algae to a safe intermediate position (ReefPickup) before elevator moves if needed.
+     * - Elevator: Adjusted after coral stowed and algae safe, respecting algae position constraints.
+     * - Algae Target: Adjusted after elevator, with Rule R2 (no stow if loaded) and Rule R3 (coral position).
+     * - Coral Final: Adjusted last to target position.
      * @param config The target state configuration (coral, algae, elevator setpoints)
      * @return Command to execute the transition
      */
     public Command transitionToStateCommand(RobotStateConfig config) {
-        // Step 1: Adjust Coral Intake Position
-        // - Ensures coral moves to target while respecting rules
-        Command adjustCoral = Commands.either(
-            Commands.none(), // Skip if coral is already at target
+        Command debugStart = Commands.runOnce(() -> {
+            System.out.println("Transition Start - Algae: " + AlgaeSubsystem.getAlgaeRotationPosition() + 
+                ", Elevator: " + ElevatorSubsystem.getElevatorPosition() + 
+                ", Coral: " + CoralSubsystem.getCoralRotationPosition() +
+                ", Target: " + config.algaeTarget + "/" + config.elevatorTarget + "/" + config.coralTarget);
+        });
+    
+        // Step 1: Move Coral to Stowed First (if elevator will move and coral not already stowed)
+        Command adjustCoralToStowed = Commands.either(
+            Commands.none(),
             Commands.sequence(
-                Commands.runOnce(() -> System.out.println("Starting adjustCoral")).ignoringDisable(true),
-                // Coral Rule R1: Wait until elevator is at target if coral targets kStartingPosition
-                Commands.waitUntil(() -> {
-                    boolean condition = config.coralTarget != CoralSetpoint.kStartingPosition ||
-                                        Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 1;
-                    System.out.println("Coral R1 wait: " + condition);
-                    return condition;
-                }).andThen(
-                    Commands.runOnce(() -> {
-                        if (config.coralTarget == CoralSetpoint.kStartingPosition &&
-                            Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) >= 1) {
-                            System.out.println("Moving elevator for Coral R1");
-                            ElevatorSubsystem.setSetpointCommand(config.elevatorTarget).execute();
-                            SmartDashboard.putString("Transition Info", "Moved elevator to target to allow coral to Starting");
-                        }
-                    }).ignoringDisable(true)
-                ),
-                // Check coral loaded state for kStartingPosition
-                Commands.runOnce(() -> {
-                    if (CoralSubsystem.isCoralIntakeLoaded() && config.coralTarget == CoralSetpoint.kStartingPosition) {
-                        SmartDashboard.putString("Transition Error", "Coral cannot move to Starting position when loaded");
-                    }
-                }).ignoringDisable(true),
-                // Coral Rule R3: Move algae to safe position if coral targets kShootingPosition and algae is at kShootingPosition
-                Commands.sequence(
-                    Commands.runOnce(() -> {
-                        if (config.coralTarget == CoralSetpoint.kShootingPosition &&
-                            Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kShootingPosition) < 0.01) {
-                            System.out.println("Moving algae to safe position for Coral R3");
-                        }
-                    }).ignoringDisable(true),
-                    Commands.either(
-                        AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kReefPickupPosition)
-                            .andThen(Commands.waitUntil(() -> {
-                                boolean condition = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kReefPickupPosition) < 0.01;
-                                System.out.println("Algae R3 safe wait: " + condition + " (Algae Pos: " + AlgaeSubsystem.getAlgaeRotationPosition() + ")");
-                                return condition;
-                            }).withTimeout(5.0)),
-                        Commands.none(),
-                        () -> config.coralTarget == CoralSetpoint.kShootingPosition &&
-                              Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kShootingPosition) < 0.01
-                    ),
-                    Commands.runOnce(() -> {
-                        if (config.coralTarget == CoralSetpoint.kShootingPosition &&
-                            Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kShootingPosition) < 0.01) {
-                            SmartDashboard.putString("Transition Info", "Moved algae to ReefPickup to allow coral Shooting");
-                        }
-                    }).ignoringDisable(true)
-                ),
-                // Wait until algae is clear of kShootingPosition for coral kShootingPosition
-                Commands.waitUntil(() -> {
-                    boolean condition = config.coralTarget != CoralSetpoint.kShootingPosition ||
-                                        Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kShootingPosition) >= 0.01;
-                    System.out.println("Coral R3 wait: " + condition);
-                    return condition;
-                }).withTimeout(5.0),
-                // Conditional coral adjustments based on algae target
-                Commands.either(
-                    CoralSubsystem.setCoralSetpointCommand(config.coralTarget),
-                    CoralSubsystem.setCoralSetpointCommand(CoralSetpoint.kStowedPosition),
-                    () -> config.algaeTarget != AlgaeSetpoint.kGroundPickupPosition &&
-                          config.algaeTarget != AlgaeSetpoint.kReefPickupPosition
-                ),
-                // Algae adjustment for kHumanPickupPosition (Rule R5)
-                Commands.either(
-                    Commands.none(),
-                    Commands.sequence(
-                        AlgaeSubsystem.setSetpointCommand(
-                            AlgaeSubsystem.isAlgaeIntakeLoaded() ? AlgaeSetpoint.kReefPickupPosition : AlgaeSetpoint.kStowedPosition
-                        ),
-                        Commands.waitUntil(() -> {
-                            boolean condition = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - 
-                                (AlgaeSubsystem.isAlgaeIntakeLoaded() ? AlgaeSubsystem.kReefPickupPosition : AlgaeSubsystem.kStowedPosition)) < 0.01;
-                            System.out.println("Algae coral human wait: " + condition + " (Algae Pos: " + AlgaeSubsystem.getAlgaeRotationPosition() + ")");
-                            return condition;
-                        }).withTimeout(5.0)
-                    ),
-                    () -> config.coralTarget != CoralSetpoint.kHumanPickupPosition ||
-                          Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01
-                ),
-                Commands.either(
-                    CoralSubsystem.setCoralSetpointCommand(config.coralTarget),
-                    CoralSubsystem.setCoralSetpointCommand(CoralSetpoint.kStowedPosition),
-                    () -> config.algaeTarget != AlgaeSetpoint.kProcessorPosition
-                ),
-                // Final coral move to target
-                CoralSubsystem.setCoralSetpointCommand(config.coralTarget),
-                Commands.waitUntil(() -> {
-                    boolean condition = Math.abs(CoralSubsystem.getCoralRotationPosition() - getSetpointValue(config.coralTarget)) < 0.01;
-                    return condition;
-                }),
-                Commands.runOnce(() -> System.out.println("Finished adjustCoral")).ignoringDisable(true)
+                Commands.runOnce(() -> System.out.println("Step: Coral to Stowed (Initial)")),
+                CoralSubsystem.setCoralSetpointCommand(CoralSetpoint.kStowedPosition),
+                Commands.waitUntil(() -> Math.abs(CoralSubsystem.getCoralRotationPosition() - CoralSubsystem.kStowedPosition) < 0.01).withTimeout(10.0)
             ),
-            () -> Math.abs(CoralSubsystem.getCoralRotationPosition() - getSetpointValue(config.coralTarget)) < 0.01
+            () -> Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 1 ||
+                  Math.abs(CoralSubsystem.getCoralRotationPosition() - CoralSubsystem.kStowedPosition) < 0.01
         );
-
-        // Step 2: Adjust Algae to Safe Position
-        // - Moves algae to kReefPickupPosition (0.5) to avoid Rule R1 violations during elevator movement
+    
+        // Step 2: Adjust Algae to Safe Position (kSafePosition) if entering/leaving kShootingPosition or moving from kStowedPosition
         Command adjustAlgaeToSafe = Commands.either(
             Commands.none(),
             Commands.sequence(
-                Commands.runOnce(() -> System.out.println("Starting adjustAlgaeToSafe")).ignoringDisable(true),
-                AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kReefPickupPosition),
-                Commands.waitUntil(() -> {
-                    boolean condition = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kReefPickupPosition) < 0.01;
-                    System.out.println("Algae safe wait: " + condition + " (Algae Pos: " + AlgaeSubsystem.getAlgaeRotationPosition() + ")");
-                    return condition;
-                }).withTimeout(5.0),
-                Commands.runOnce(() -> System.out.println("Finished adjustAlgaeToSafe")).ignoringDisable(true)
-            ),
-            () -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kReefPickupPosition) < 0.01 ||
-                  (Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget)) < 0.01 &&
-                   Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 1)
-        );
-
-        // Step 3: Adjust Elevator Position
-        // - Moves elevator to target, ensuring algae is safe if moving away from kAlgaeShootingPosition
-        Command adjustElevator = Commands.either(
-            Commands.none(),
-            Commands.sequence(
-                Commands.runOnce(() -> {
-                    boolean needsSafeMove = Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kAlgaeShootingPosition) < 1 &&
-                                            config.elevatorTarget != ElevatorSetpoint.kAlgaeShootingPosition &&
-                                            Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kShootingPosition) < 0.1;
-                    System.out.println("Starting adjustElevator, Elevator R1 check: " + needsSafeMove + " (Current Algae Pos: " + AlgaeSubsystem.getAlgaeRotationPosition() + ")");
-                    if (needsSafeMove) {
-                        System.out.println("Moving algae to ReefPickup");
-                        SmartDashboard.putString("Transition Info", "Moved algae to Reef Pickup to unblock elevator from Algae Shooting");
-                    }
-                    SmartDashboard.putBoolean("NeedsSafeMoveDebug", needsSafeMove);
-                }).ignoringDisable(true),
-                // Elevator Rule R1: Move algae to safe position if needed
                 Commands.either(
-                    AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kReefPickupPosition)
-                        .andThen(Commands.runOnce(() -> {
-                            System.out.println("Post-set algae target: " + AlgaeSubsystem.getAlgaeRotationCurrentTarget());
-                            SmartDashboard.putNumber("Debug Algae Target", AlgaeSubsystem.getAlgaeRotationCurrentTarget());
-                        }).ignoringDisable(true)),
+                    Commands.sequence(
+                        Commands.runOnce(() -> System.out.println("Step: Elevator to Stowed for Algae Move")),
+                        ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kStowedPosition),
+                        Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) < 1).withTimeout(10.0)
+                    ),
                     Commands.none(),
-                    () -> SmartDashboard.getBoolean("NeedsSafeMoveDebug", false)
+                    () -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01 && 
+                          config.algaeTarget != AlgaeSetpoint.kStowedPosition
                 ),
-                Commands.waitUntil(() -> {
-                    boolean needsSafeMove = SmartDashboard.getBoolean("NeedsSafeMoveDebug", false);
-                    boolean algaeSafe = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kReefPickupPosition) < 0.01;
-                    boolean condition = !needsSafeMove || algaeSafe;
-                    System.out.println("Elevator R1 wait: " + condition + " (Algae Pos: " + AlgaeSubsystem.getAlgaeRotationPosition() + ", Target: " + AlgaeSubsystem.getAlgaeRotationCurrentTarget() + ", InitialNeedsSafeMove: " + needsSafeMove + ")");
-                    return condition;
-                }).withTimeout(5.0),
-                Commands.runOnce(() -> System.out.println("Setting elevator target")).ignoringDisable(true),
-                ElevatorSubsystem.setSetpointCommand(config.elevatorTarget),
-                Commands.waitUntil(() -> {
-                    boolean condition = Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 1;
-                    System.out.println("Elevator target wait: " + condition + " (Elevator Pos: " + ElevatorSubsystem.getElevatorPosition() + ", Target: " + ElevatorSubsystem.getElevatorCurrentTarget() + ")");
-                    return condition;
-                }).withTimeout(5.0),
-                Commands.runOnce(() -> System.out.println("Finished adjustElevator")).ignoringDisable(true)
+                Commands.runOnce(() -> System.out.println("Step: Algae to Safe (SafePosition)")),
+                AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kSafePosition), // Changed from kReefPickupPosition
+                Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kSafePosition) < 0.01).withTimeout(10.0)
             ),
-            () -> Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 1
+            () -> {
+                boolean elevatorMoving = Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) > 1;
+                boolean algaeAtTarget = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget)) < 0.01;
+                boolean algaeEnteringShooting = config.algaeTarget == AlgaeSetpoint.kShootingPosition &&
+                                               Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01;
+                boolean algaeLeavingShooting = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kShootingPosition) < 0.01 &&
+                                              Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kAlgaeShootingPosition) < 1 &&
+                                              config.elevatorTarget != ElevatorSetpoint.kAlgaeShootingPosition;
+                boolean algaeLeavingStowed = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01 &&
+                                            config.algaeTarget != AlgaeSetpoint.kStowedPosition;
+                boolean needsSafeMove = algaeEnteringShooting || algaeLeavingShooting || algaeLeavingStowed;
+                System.out.println("Algae Safe Check - Moving: " + elevatorMoving + ", At Target: " + algaeAtTarget + 
+                                  ", Entering: " + algaeEnteringShooting + ", Leaving Shooting: " + algaeLeavingShooting + 
+                                  ", Leaving Stowed: " + algaeLeavingStowed + ", Needs Safe: " + needsSafeMove);
+                return !elevatorMoving || algaeAtTarget || !needsSafeMove;
+            }
         );
-
-        // Step 4: Adjust Algae to Final Target
-        // - Moves algae to final target with Rule R2 enforcement (no stow if loaded)
+    
+        // Step 3: Adjust Algae to Target (including stowing if needed)
         Command adjustAlgaeToTarget = Commands.either(
             Commands.none(),
             Commands.sequence(
-                Commands.runOnce(() -> System.out.println("Starting adjustAlgaeToTarget")).ignoringDisable(true),
-                // Algae Rule R1: Wait until elevator is at kStowedPosition if targeting kStowedPosition
-                Commands.waitUntil(() -> {
-                    boolean condition = config.algaeTarget != AlgaeSetpoint.kStowedPosition ||
-                                        Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) < 1;
-                    System.out.println("Algae R1 wait: " + condition);
-                    return condition;
-                }).andThen(
-                    Commands.runOnce(() -> {
-                        if (config.algaeTarget == AlgaeSetpoint.kStowedPosition &&
-                            Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) >= 1) {
-                            System.out.println("Moving elevator for Algae R1");
-                            ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kStowedPosition).execute();
-                            SmartDashboard.putString("Transition Info", "Moved elevator to Stowed to allow algae to Stow");
-                        }
-                    }).ignoringDisable(true)
-                ),
-                // Algae Rule R2: Warn if attempting to stow while loaded
-                Commands.runOnce(() -> {
-                    if (config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.isAlgaeIntakeLoaded()) {
-                        SmartDashboard.putString("Transition Error", "Algae cannot move to Stowed when loaded");
-                    }
-                }).ignoringDisable(true),
-                // Algae Rule R3: Wait until coral is clear if targeting kShootingPosition
-                Commands.waitUntil(() -> {
-                    boolean condition = config.algaeTarget != AlgaeSetpoint.kShootingPosition ||
-                                        Math.abs(CoralSubsystem.getCoralRotationPosition() - CoralSubsystem.kShootingPosition) >= 0.01;
-                    System.out.println("Algae R3 wait: " + condition);
-                    return condition;
-                }).andThen(
-                    Commands.runOnce(() -> {
-                        if (config.algaeTarget == AlgaeSetpoint.kShootingPosition &&
-                            Math.abs(CoralSubsystem.getCoralRotationPosition() - CoralSubsystem.kShootingPosition) < 0.01) {
-                            System.out.println("Moving coral for Algae R3");
-                            CoralSubsystem.setCoralSetpointCommand(CoralSetpoint.kStowedPosition).execute();
-                            SmartDashboard.putString("Transition Info", "Moved coral to Stowed to allow algae Shooting");
-                        }
-                    }).ignoringDisable(true)
-                ),
-                // Set and lock algae loaded state, apply initial setpoint
                 Commands.runOnce(() -> {
                     boolean loaded = AlgaeSubsystem.isAlgaeIntakeLoaded();
-                    System.out.println("Setting algae target");
-                    System.out.println("Algae loaded: " + loaded + " (Distance: " + 
-                        AlgaeSubsystem.algaeIntakeLoadSensor.getDistance().getValueAsDouble() + ", Detected: " + 
-                        AlgaeSubsystem.algaeIntakeLoadSensor.getIsDetected().getValue() + ")");
-                    AlgaeSubsystem.setLoadedLocked(loaded); // Lock state for consistency
-                    AlgaeSetpoint target = config.algaeTarget == AlgaeSetpoint.kStowedPosition && loaded
-                        ? AlgaeSetpoint.kReefPickupPosition : config.algaeTarget;
-                    AlgaeSubsystem.setSetpointCommand(target).execute();
-                }).ignoringDisable(true),
-                // Continuously enforce setpoint for 5s, then wait until position matches
-                Commands.sequence(
-                    Commands.run(() -> {
-                        boolean loaded = AlgaeSubsystem.getLoadedLocked();
-                        AlgaeSetpoint target = config.algaeTarget == AlgaeSetpoint.kStowedPosition && loaded
-                            ? AlgaeSetpoint.kReefPickupPosition : config.algaeTarget;
-                        AlgaeSubsystem.setSetpointCommand(target, true).execute();
-                        System.out.println("Continuous algae setpoint: " + getSetpointValue(target));
-                    }).withTimeout(5.0),
-                    Commands.waitUntil(() -> {
-                        boolean loaded = AlgaeSubsystem.getLoadedLocked();
-                        AlgaeSetpoint target = config.algaeTarget == AlgaeSetpoint.kStowedPosition && loaded
-                            ? AlgaeSetpoint.kReefPickupPosition : config.algaeTarget;
-                        double targetValue = getSetpointValue(target);
-                        boolean condition = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - targetValue) < 0.01;
-                        System.out.println("Algae target wait: " + condition + " (Algae Pos: " + 
-                            AlgaeSubsystem.getAlgaeRotationPosition() + ", Target: " + targetValue + ")");
-                        return condition;
-                    }).withTimeout(5.0)
+                    AlgaeSubsystem.setLoadedLocked(loaded);
+                    System.out.println("Step: Algae to Target - Loaded: " + loaded);
+                }),
+                Commands.either(
+                    Commands.sequence(
+                        Commands.runOnce(() -> System.out.println("Step: Elevator to Stowed for Algae Stow")),
+                        ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kStowedPosition),
+                        Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) < 1).withTimeout(10.0),
+                        AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget), // Changed from kReefPickupPosition
+                        Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
+                    ),
+                    Commands.either(
+                        Commands.sequence(
+                            Commands.runOnce(() -> System.out.println("Step: Elevator to Algae Shooting")),
+                            ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kAlgaeShootingPosition),
+                            Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kAlgaeShootingPosition) < 1).withTimeout(10.0),
+                            AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kShootingPosition)
+                        ),
+                        AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget), // Changed from kReefPickupPosition
+                        () -> config.algaeTarget == AlgaeSetpoint.kShootingPosition
+                    ),
+                    () -> config.algaeTarget == AlgaeSetpoint.kStowedPosition && 
+                          Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) >= 0.01
                 ),
-                Commands.runOnce(() -> System.out.println("Finished adjustAlgaeToTarget")).ignoringDisable(true)
+                Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
             ),
             () -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget)) < 0.01
         );
-
-        // Execute the full transition sequence
+    
+        // Step 4: Adjust Elevator to Target (after algae is set)
+        Command adjustElevator = Commands.either(
+            Commands.none(),
+            Commands.sequence(
+                Commands.runOnce(() -> System.out.println("Step: Elevator to Target")),
+                ElevatorSubsystem.setSetpointCommand(config.elevatorTarget),
+                Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 1).withTimeout(10.0)
+            ),
+            () -> Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 1
+        );
+    
+        // Step 5: Move Coral to Final Target (respecting loaded state and algae position)
+        Command adjustCoralToFinal = Commands.either(
+            Commands.none(),
+            Commands.sequence(
+                Commands.runOnce(() -> {
+                    boolean loaded = CoralSubsystem.isCoralIntakeLoaded();
+                    if (config.coralTarget == CoralSetpoint.kStartingPosition && loaded) {
+                        System.out.println("Transition Error: Coral cannot move to Starting position when loaded - staying at Stowed");
+                    }
+                }),
+                Commands.waitUntil(() -> config.coralTarget != CoralSetpoint.kShootingPosition || 
+                                       Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kShootingPosition) >= 0.01).withTimeout(10.0),
+                CoralSubsystem.setCoralSetpointCommand(config.coralTarget == CoralSetpoint.kStartingPosition && CoralSubsystem.isCoralIntakeLoaded() ? CoralSetpoint.kStowedPosition : config.coralTarget),
+                Commands.waitUntil(() -> Math.abs(CoralSubsystem.getCoralRotationPosition() - getSetpointValue(config.coralTarget == CoralSetpoint.kStartingPosition && CoralSubsystem.isCoralIntakeLoaded() ? CoralSetpoint.kStowedPosition : config.coralTarget)) < 0.01).withTimeout(10.0)
+            ),
+            () -> Math.abs(CoralSubsystem.getCoralRotationPosition() - getSetpointValue(config.coralTarget)) < 0.01
+        );
+    
         return Commands.sequence(
-            adjustCoral,
+            debugStart,
+            adjustCoralToStowed,
             adjustAlgaeToSafe,
+            adjustAlgaeToTarget,
             adjustElevator,
-            adjustAlgaeToTarget
+            adjustCoralToFinal
         ).handleInterrupt(() -> System.out.println("State transition interrupted"));
     }
 
@@ -456,6 +331,7 @@ public class RobotContainer {
                 case kProcessorPosition -> AlgaeSubsystem.kProcessorPosition;
                 case kReefPickupPosition -> AlgaeSubsystem.kReefPickupPosition;
                 case kShootingPosition -> AlgaeSubsystem.kShootingPosition;
+                case kSafePosition -> AlgaeSubsystem.kSafePosition;
             };
         } else if (setpoint instanceof ElevatorSetpoint) {
             return switch ((ElevatorSetpoint) setpoint) {

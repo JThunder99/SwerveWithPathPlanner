@@ -16,6 +16,7 @@ public class CANdleSubsystem extends SubsystemBase {
     private boolean lastAlgaeLoaded = false;
     private boolean lastCoralLoaded = false;
     private boolean lastShooting = false;
+    private boolean lastCoralShooting = false;
 
     public CANdleSubsystem(AlgaeSubsystem algaeSubsystem, CoralSubsystem coralSubsystem) {
         this.algaeSubsystem = algaeSubsystem;
@@ -30,32 +31,37 @@ public class CANdleSubsystem extends SubsystemBase {
     public void periodic() {
         boolean algaeLoaded = algaeSubsystem.isAlgaeIntakeLoaded();
         boolean coralLoaded = coralSubsystem.isCoralIntakeLoaded();
-        boolean isShooting = algaeSubsystem.getAlgaeRotationCurrentTarget() == AlgaeSubsystem.kShootingPosition ||
-                             coralSubsystem.getCoralRotationCurrentTarget() == CoralSubsystem.kShootingPosition;
+        boolean algaeShooting = algaeSubsystem.getAlgaeRotationCurrentTarget() == AlgaeSubsystem.kShootingPosition;
+        boolean coralShooting = coralSubsystem.getCoralRotationCurrentTarget() == CoralSubsystem.kShootingPosition;
 
-        // Update CANdle only on state change
-        if (algaeLoaded != lastAlgaeLoaded || coralLoaded != lastCoralLoaded || isShooting != lastShooting) {
-            candle.clearAnimation(0); // Clear any running animation before new state
-            if (algaeLoaded) {
-                if (isShooting) {
-                    candle.animate(new com.ctre.phoenix.led.StrobeAnimation(0, 255, 0, 0, 0.1, 8), 0);
+        if (algaeLoaded != lastAlgaeLoaded || coralLoaded != lastCoralLoaded || algaeShooting != lastShooting || coralShooting != lastCoralShooting) {
+            candle.clearAnimation(0);
+            if (algaeLoaded && coralLoaded) {
+                // Both loaded (rare case): Prioritize algae for now, could refine further
+                if (algaeShooting) {
+                    candle.animate(new com.ctre.phoenix.led.StrobeAnimation(0, 255, 0, 0, 0.1, 8), 0); // Green flash
                 } else {
-                    candle.setLEDs(0, 255, 0, 0, 0, 8);
+                    candle.setLEDs(0, 255, 0, 0, 0, 8); // Solid green
+                }
+            } else if (algaeLoaded) {
+                if (algaeShooting) {
+                    candle.animate(new com.ctre.phoenix.led.StrobeAnimation(0, 255, 0, 0, 0.1, 8), 0); // Green flash
+                } else {
+                    candle.setLEDs(0, 255, 0, 0, 0, 8); // Solid green
                 }
             } else if (coralLoaded) {
-                if (isShooting) {
-                    candle.animate(new com.ctre.phoenix.led.StrobeAnimation(255, 165, 0, 0, 0.1, 8), 0);
+                if (coralShooting) {
+                    candle.animate(new com.ctre.phoenix.led.StrobeAnimation(255, 165, 0, 0, 0.1, 8), 0); // Orange flash
                 } else {
-                    candle.setLEDs(255, 165, 0, 0, 0, 8);
+                    candle.setLEDs(255, 165, 0, 0, 0, 8); // Solid orange
                 }
             } else {
-                candle.setLEDs(0, 0, 0, 0, 0, 8);
+                candle.setLEDs(0, 0, 0, 0, 0, 8); // Off
             }
-
-            // Update last states
             lastAlgaeLoaded = algaeLoaded;
             lastCoralLoaded = coralLoaded;
-            lastShooting = isShooting;
+            lastShooting = algaeShooting; // Update to track algae shooting state
+            lastCoralShooting = coralShooting; // Add tracking for coral shooting state
         }
     }
 }
