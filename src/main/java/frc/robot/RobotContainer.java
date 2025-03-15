@@ -205,7 +205,7 @@ public class RobotContainer {
                   Math.abs(CoralSubsystem.getCoralRotationPosition() - CoralSubsystem.kStowedPosition) < 0.01
         );
     
-        // Step 2: Adjust Algae to Safe Position (ReefPickup) if entering/leaving kShootingPosition or moving from kStowedPosition
+        // Step 2: Adjust Algae to Safe Position (kSafePosition) if entering/leaving kShootingPosition or moving from kStowedPosition
         Command adjustAlgaeToSafe = Commands.either(
             Commands.none(),
             Commands.sequence(
@@ -219,9 +219,9 @@ public class RobotContainer {
                     () -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01 && 
                           config.algaeTarget != AlgaeSetpoint.kStowedPosition
                 ),
-                Commands.runOnce(() -> System.out.println("Step: Algae to Safe (ReefPickup)")),
-                AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kReefPickupPosition),
-                Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kReefPickupPosition) < 0.01).withTimeout(10.0)
+                Commands.runOnce(() -> System.out.println("Step: Algae to Safe (SafePosition)")),
+                AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kSafePosition), // Changed from kReefPickupPosition
+                Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kSafePosition) < 0.01).withTimeout(10.0)
             ),
             () -> {
                 boolean elevatorMoving = Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) > 1;
@@ -255,8 +255,8 @@ public class RobotContainer {
                         Commands.runOnce(() -> System.out.println("Step: Elevator to Stowed for Algae Stow")),
                         ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kStowedPosition),
                         Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) < 1).withTimeout(10.0),
-                        AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kReefPickupPosition : config.algaeTarget),
-                        Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kReefPickupPosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
+                        AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget), // Changed from kReefPickupPosition
+                        Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
                     ),
                     Commands.either(
                         Commands.sequence(
@@ -265,13 +265,13 @@ public class RobotContainer {
                             Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kAlgaeShootingPosition) < 1).withTimeout(10.0),
                             AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kShootingPosition)
                         ),
-                        AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kReefPickupPosition : config.algaeTarget),
+                        AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget), // Changed from kReefPickupPosition
                         () -> config.algaeTarget == AlgaeSetpoint.kShootingPosition
                     ),
                     () -> config.algaeTarget == AlgaeSetpoint.kStowedPosition && 
                           Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) >= 0.01
                 ),
-                Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kReefPickupPosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
+                Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
             ),
             () -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget)) < 0.01
         );
@@ -331,6 +331,7 @@ public class RobotContainer {
                 case kProcessorPosition -> AlgaeSubsystem.kProcessorPosition;
                 case kReefPickupPosition -> AlgaeSubsystem.kReefPickupPosition;
                 case kShootingPosition -> AlgaeSubsystem.kShootingPosition;
+                case kSafePosition -> AlgaeSubsystem.kSafePosition;
             };
         } else if (setpoint instanceof ElevatorSetpoint) {
             return switch ((ElevatorSetpoint) setpoint) {

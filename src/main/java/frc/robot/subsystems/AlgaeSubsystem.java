@@ -38,6 +38,7 @@ public class AlgaeSubsystem extends SubsystemBase {
   public static final double kProcessorPosition = .4;
   public static final double kReefPickupPosition = .5;
   public static final double kShootingPosition = .2;
+  public static final double kSafePosition = .45;
 
   /** Subsystem-wide setpoints */
   public enum AlgaeSetpoint {
@@ -45,7 +46,8 @@ public class AlgaeSubsystem extends SubsystemBase {
     kGroundPickupPosition,
     kProcessorPosition,
     kReefPickupPosition,
-    kShootingPosition
+    kShootingPosition,
+    kSafePosition
   }
 
   private double algaeRotationCurrentTarget = kStowedPosition;
@@ -189,7 +191,7 @@ public class AlgaeSubsystem extends SubsystemBase {
         boolean loaded = getLoadedLocked(); // Use locked state for consistency
         switch (algaesetpoint) {
             case kStowedPosition:
-                target = loaded ? kReefPickupPosition : kStowedPosition;
+                target = loaded ? kSafePosition : kStowedPosition;
                 break;
             case kGroundPickupPosition:
                 target = kGroundPickupPosition;
@@ -202,6 +204,9 @@ public class AlgaeSubsystem extends SubsystemBase {
                 break;
             case kShootingPosition:
                 target = kShootingPosition;
+                break;
+            case kSafePosition:
+                target = kSafePosition;
                 break;
             default:
                 target = kStowedPosition;
@@ -236,7 +241,9 @@ public class AlgaeSubsystem extends SubsystemBase {
       "Set_Algae_Setpoint_Reef_Pickup",
       setSetpointCommand(AlgaeSetpoint.kReefPickupPosition),
       "Set_Algae_Setpoint_Shooting",
-      setSetpointCommand(AlgaeSetpoint.kShootingPosition)
+      setSetpointCommand(AlgaeSetpoint.kShootingPosition),
+      "Set_Algae_Setpoint_Safe", 
+      setSetpointCommand(AlgaeSetpoint.kSafePosition)
     );
   }
 }
