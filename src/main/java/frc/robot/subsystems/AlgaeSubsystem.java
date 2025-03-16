@@ -24,8 +24,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class AlgaeSubsystem extends SubsystemBase {
   /** Creates a new IntakeSubsystem. */
-  public SparkFlex algaeIntakeMotor = new SparkFlex(13, MotorType.kBrushless);
-  public SparkFlex algaeIntakeRotationMotor = new SparkFlex(14, MotorType.kBrushless);
+  public SparkFlex algaeIntakeMotor = new SparkFlex(32, MotorType.kBrushless);
+  public SparkFlex algaeIntakeRotationMotor = new SparkFlex(35, MotorType.kBrushless);
 
   SparkFlexConfig algaeIntakeMotorConfig = new SparkFlexConfig();
   SparkFlexConfig algaeRotationMotorConfig = new SparkFlexConfig();
@@ -34,11 +34,11 @@ public class AlgaeSubsystem extends SubsystemBase {
   RelativeEncoder algaeRotationEncoder = algaeIntakeRotationMotor.getExternalEncoder();
 
   public static final double kStowedPosition = 0;
-  public static final double kGroundPickupPosition = .5;
-  public static final double kProcessorPosition = .4;
-  public static final double kReefPickupPosition = .5;
-  public static final double kShootingPosition = .2;
-  public static final double kSafePosition = .45;
+  public static final double kGroundPickupPosition = .9;
+  public static final double kProcessorPosition = .7;
+  public static final double kReefPickupPosition = .85;
+  public static final double kShootingPosition = .5;
+  public static final double kSafePosition = .85;
 
   /** Subsystem-wide setpoints */
   public enum AlgaeSetpoint {

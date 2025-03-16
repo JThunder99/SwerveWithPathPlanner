@@ -24,8 +24,8 @@ import com.revrobotics.RelativeEncoder;
 public class ElevatorSubsystem extends SubsystemBase {
   /** Creates a new ElevatorSubsystem. */
 
-  SparkFlex elevator1 = new SparkFlex(11, MotorType.kBrushless);
-  SparkFlex elevator2 = new SparkFlex(12, MotorType.kBrushless);
+  SparkFlex elevator1 = new SparkFlex(33, MotorType.kBrushless);
+  SparkFlex elevator2 = new SparkFlex(34, MotorType.kBrushless);
 
   SparkFlexConfig elevator1Config = new SparkFlexConfig();
   SparkFlexConfig elevator2Config = new SparkFlexConfig();

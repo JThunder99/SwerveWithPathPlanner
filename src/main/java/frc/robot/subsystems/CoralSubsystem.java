@@ -26,8 +26,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 public class CoralSubsystem extends SubsystemBase {
   /** Creates a new CoralSubsystem. */
 
-  public SparkMax coralIntakeMotor = new SparkMax(15, MotorType.kBrushless);
-  SparkFlex coralIntakeRotationMotor = new SparkFlex(16, MotorType.kBrushless);
+  public SparkMax coralIntakeMotor = new SparkMax(31, MotorType.kBrushless);
+  SparkFlex coralIntakeRotationMotor = new SparkFlex(36, MotorType.kBrushless);
 
   SparkMaxConfig coralMotorConfig = new SparkMaxConfig();
   SparkFlexConfig coralRotationMotorConfig = new SparkFlexConfig();
@@ -37,8 +37,8 @@ public class CoralSubsystem extends SubsystemBase {
 
   public static final double kStartingPosition = 0;
   public static final double kStowedPosition = .05;
-  public static final double kHumanPickupPosition = .1;
-  public static final double kShootingPosition = .3;
+  public static final double kHumanPickupPosition = .3;
+  public static final double kShootingPosition = .5;
 
   /** Subsystem-wide setpoints */
   public enum CoralSetpoint {
