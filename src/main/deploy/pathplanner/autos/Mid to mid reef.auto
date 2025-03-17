@@ -5,46 +5,9 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "path",
           "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Set_Algae_Setpoint_Reef_Pickup"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Mid to mid reef"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Set_Coral_Setpoint_Stowed"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Set_Elevator_Setpoint_Level4"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Set_Coral_Setpoint_Shooting"
+            "pathName": "Mid to mid reef"
           }
         },
         {
@@ -66,59 +29,9 @@
           }
         },
         {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Stop_Coral_Intake"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Set_Coral_Setpoint_Stowed"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 1.0
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Pick_Up_Algae"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Set_Elevator_Setpoint_Level3"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 2.0
-                }
-              }
-            ]
-          }
-        },
-        {
           "type": "named",
           "data": {
-            "name": "Stop_Algae_Intake"
+            "name": "Stop_Coral_Intake"
           }
         },
         {
@@ -128,15 +41,9 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "Set_Elevator_Setpoint_Stowed"
-          }
-        },
-        {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
+            "waitTime": 2.0
           }
         },
         {
@@ -148,7 +55,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Set_Elevator_Setpoint_AlgaeShootingPosition"
+            "name": "Eject_Algae"
           }
         },
         {
@@ -160,7 +67,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Set_Algae_Setpoint_Shooting"
+            "name": "Stop_Algae_Intake"
           }
         },
         {
@@ -172,56 +79,7 @@
         {
           "type": "named",
           "data": {
-            "name": "Eject_Algae"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "parallel",
-          "data": {
-            "commands": [
-              {
-                "type": "named",
-                "data": {
-                  "name": "Stop_Algae_Intake"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "Set_Algae_Setpoint_Reef_Pickup"
-                }
-              },
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 1.0
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Set_Elevator_Setpoint_Stowed"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 2.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Set_Algae_Setpoint_Stowed"
+            "name": "TransitionToRobotStowed"
           }
         }
       ]

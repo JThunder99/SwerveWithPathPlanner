@@ -93,11 +93,24 @@ public class RobotContainer {
         // Register the named commands from each subsystem that may be used in PathPlanner
         //NamedCommands.registerCommands(Drivetrain.getNamedCommands());
         NamedCommands.registerCommands(AlgaeSubsystem.getNamedCommands());
-        NamedCommands.registerCommands(ElevatorSubsystem.getNamedCommands());
         NamedCommands.registerCommands(CoralSubsystem.getNamedCommands());
+        //NamedCommands.registerCommands(ElevatorSubsystem.getNamedCommands());
+
+        // Register transition commands for each RobotStateConfig
+        NamedCommands.registerCommand("TransitionToAlgaeGroundPickup", transitionToStateCommand(RobotStateConfig.ALGAE_GROUND_PICKUP));
+        NamedCommands.registerCommand("TransitionToAlgaeProcessor", transitionToStateCommand(RobotStateConfig.ALGAE_PROCESSOR));
+        NamedCommands.registerCommand("TransitionToAlgaeReefLevel1Pickup", transitionToStateCommand(RobotStateConfig.ALGAE_REEF_LEVEL_1_PICKUP));
+        NamedCommands.registerCommand("TransitionToAlgaeReefLevel2Pickup", transitionToStateCommand(RobotStateConfig.ALGAE_REEF_LEVEL_2_PICKUP));
+        NamedCommands.registerCommand("TransitionToAlgaeShooting", transitionToStateCommand(RobotStateConfig.ALGAE_SHOOTING));
+        NamedCommands.registerCommand("TransitionToCoralHumanPickup", transitionToStateCommand(RobotStateConfig.CORAL_HUMAN_PICKUP));
+        NamedCommands.registerCommand("TransitionToCoralShootingLevel1", transitionToStateCommand(RobotStateConfig.CORAL_SHOOTING_LEVEL_1));
+        NamedCommands.registerCommand("TransitionToCoralShootingLevel2", transitionToStateCommand(RobotStateConfig.CORAL_SHOOTING_LEVEL_2));
+        NamedCommands.registerCommand("TransitionToCoralShootingLevel3", transitionToStateCommand(RobotStateConfig.CORAL_SHOOTING_LEVEL_3));
+        NamedCommands.registerCommand("TransitionToCoralShootingLevel4", transitionToStateCommand(RobotStateConfig.CORAL_SHOOTING_LEVEL_4)
+        .beforeStarting(() -> System.out.println("Registered TransitionToCoralShootingLevel4")));
+        NamedCommands.registerCommand("TransitionToRobotStowed", transitionToStateCommand(RobotStateConfig.ROBOT_STOWED));
         
-        autoChooser = AutoBuilder.buildAutoChooser("Tests");
-        autoChooser.addOption("Mid_to_mid_reef", getAutonomousCommand());
+        autoChooser = AutoBuilder.buildAutoChooser("Do Nothing");
         SmartDashboard.putData("Auto Mode", autoChooser);
         
         configureBindings();
@@ -297,8 +310,11 @@ public class RobotContainer {
                         System.out.println("Transition Error: Coral cannot move to Starting position when loaded - staying at Stowed");
                     }
                 }),
-                Commands.waitUntil(() -> config.coralTarget != CoralSetpoint.kShootingPosition || 
-                                       Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kShootingPosition) >= 0.01).withTimeout(10.0),
+                Commands.waitUntil(() -> config.coralTarget != CoralSetpoint.kShootingLevel1Position &&
+                                        config.coralTarget != CoralSetpoint.kShootingLevel2Position &&
+                                        config.coralTarget != CoralSetpoint.kShootingLevel3Position &&
+                                        config.coralTarget != CoralSetpoint.kShootingLevel4Position ||
+                                        Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kShootingPosition) >= 0.01).withTimeout(10.0),
                 CoralSubsystem.setCoralSetpointCommand(config.coralTarget == CoralSetpoint.kStartingPosition && CoralSubsystem.isCoralIntakeLoaded() ? CoralSetpoint.kStowedPosition : config.coralTarget),
                 Commands.waitUntil(() -> Math.abs(CoralSubsystem.getCoralRotationPosition() - getSetpointValue(config.coralTarget == CoralSetpoint.kStartingPosition && CoralSubsystem.isCoralIntakeLoaded() ? CoralSetpoint.kStowedPosition : config.coralTarget)) < 0.01).withTimeout(10.0)
             ),
@@ -322,7 +338,10 @@ public class RobotContainer {
                 case kStartingPosition -> CoralSubsystem.kStartingPosition;
                 case kStowedPosition -> CoralSubsystem.kStowedPosition;
                 case kHumanPickupPosition -> CoralSubsystem.kHumanPickupPosition;
-                case kShootingPosition -> CoralSubsystem.kShootingPosition;
+                case kShootingLevel1Position -> CoralSubsystem.kShootingLevel1Position;  // New
+                case kShootingLevel2Position -> CoralSubsystem.kShootingLevel2Position;  // New
+                case kShootingLevel3Position -> CoralSubsystem.kShootingLevel3Position;  // New
+                case kShootingLevel4Position -> CoralSubsystem.kShootingLevel4Position;  // New
             };
         } else if (setpoint instanceof AlgaeSetpoint) {
             return switch ((AlgaeSetpoint) setpoint) {

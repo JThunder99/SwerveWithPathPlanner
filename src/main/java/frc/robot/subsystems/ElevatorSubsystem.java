@@ -105,19 +105,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   //#region Control Methods
 
-  // public void setElevatorSpeed(double speed) {
-  //   elevator1.set(speed);
-  // }
-
-  // public void stopElevatorSpeed() {
-  //   elevator1.stopMotor();
-  // }
-
-  // private void moveToSetpoint() {
-  //   elevatorClosedLoopController.setReference(
-  //     elevatorCurrentTarget, ControlType.kMAXMotionPositionControl);
-  // }
-
   private void moveElevatorToSetpoint() {
     // Clamp target to safe range based on limits
     if (elevator1.getReverseLimitSwitch().isPressed() && elevatorCurrentTarget < 0) {
@@ -152,14 +139,6 @@ public class ElevatorSubsystem extends SubsystemBase {
       wasResetByButton = false;
     }
   }
-
-  // public Command setElevatorSpeedCommand(double speed) {
-  //   return Commands.runOnce(() -> setElevatorSpeed(speed));
-  // }
-
-  // public Command stopElevatorSpeedCommand() {
-  //   return Commands.runOnce(() -> stopElevatorSpeed());
-  // }
 
   /**
    * Command to set the subsystem setpoint. This will set the elevator to the predefined
@@ -209,24 +188,24 @@ public class ElevatorSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Elevator Actual Position", elevator1Encoder.getPosition());
   }
 
-  public Map<String, Command> getNamedCommands() {
-    return Map.of(
-      "Set_Elevator_Setpoint_Stowed",
-      setSetpointCommand(ElevatorSetpoint.kStowedPosition),
-      "Set_Elevator_Setpoint_Ground",
-      setSetpointCommand(ElevatorSetpoint.kGroundPosition),
-      "Set_Elevator_Setpoint_FeederStation",
-      setSetpointCommand(ElevatorSetpoint.kFeederStation),
-      "Set_Elevator_Setpoint_Level1",
-      setSetpointCommand(ElevatorSetpoint.kLevel1),
-      "Set_Elevator_Setpoint_Level2",
-      setSetpointCommand(ElevatorSetpoint.kLevel2),
-      "Set_Elevator_Setpoint_Level3",
-      setSetpointCommand(ElevatorSetpoint.kLevel3),
-      "Set_Elevator_Setpoint_Level4",
-      setSetpointCommand(ElevatorSetpoint.kLevel4),
-      "Set_Elevator_Setpoint_AlgaeShootingPosition",
-      setSetpointCommand(ElevatorSetpoint.kAlgaeShootingPosition)
-    );
-  }
+  // public Map<String, Command> getNamedCommands() {
+  //   return Map.of(
+  //     "Set_Elevator_Setpoint_Stowed",
+  //     setSetpointCommand(ElevatorSetpoint.kStowedPosition),
+  //     "Set_Elevator_Setpoint_Ground",
+  //     setSetpointCommand(ElevatorSetpoint.kGroundPosition),
+  //     "Set_Elevator_Setpoint_FeederStation",
+  //     setSetpointCommand(ElevatorSetpoint.kFeederStation),
+  //     "Set_Elevator_Setpoint_Level1",
+  //     setSetpointCommand(ElevatorSetpoint.kLevel1),
+  //     "Set_Elevator_Setpoint_Level2",
+  //     setSetpointCommand(ElevatorSetpoint.kLevel2),
+  //     "Set_Elevator_Setpoint_Level3",
+  //     setSetpointCommand(ElevatorSetpoint.kLevel3),
+  //     "Set_Elevator_Setpoint_Level4",
+  //     setSetpointCommand(ElevatorSetpoint.kLevel4),
+  //     "Set_Elevator_Setpoint_AlgaeShootingPosition",
+  //     setSetpointCommand(ElevatorSetpoint.kAlgaeShootingPosition)
+  //   );
+  // }
 }

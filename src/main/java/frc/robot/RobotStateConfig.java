@@ -60,26 +60,26 @@ public class RobotStateConfig {
     );
 
     public static final RobotStateConfig CORAL_SHOOTING_LEVEL_1 = new RobotStateConfig(
-        CoralSetpoint.kShootingPosition,
+        CoralSetpoint.kShootingLevel1Position,
         AlgaeSetpoint.kStowedPosition,
         ElevatorSetpoint.kLevel1
     );
 
     public static final RobotStateConfig CORAL_SHOOTING_LEVEL_2 = new RobotStateConfig(
-        CoralSetpoint.kShootingPosition,
+        CoralSetpoint.kShootingLevel2Position,
         AlgaeSetpoint.kStowedPosition,
         ElevatorSetpoint.kLevel2
     );
 
     public static final RobotStateConfig CORAL_SHOOTING_LEVEL_3 = new RobotStateConfig(
-        CoralSetpoint.kShootingPosition,
+        CoralSetpoint.kShootingLevel3Position,
         AlgaeSetpoint.kStowedPosition,
         ElevatorSetpoint.kLevel3
     );
 
     public static final RobotStateConfig CORAL_SHOOTING_LEVEL_4 = new RobotStateConfig(
-        CoralSetpoint.kShootingPosition,
-        AlgaeSetpoint.kReefPickupPosition,
+        CoralSetpoint.kShootingLevel4Position,
+        AlgaeSetpoint.kSafePosition,
         ElevatorSetpoint.kLevel4
     );
 

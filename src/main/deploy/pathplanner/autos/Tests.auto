@@ -11,21 +11,33 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
           "type": "named",
           "data": {
-            "name": "Eject_Game_Piece"
+            "name": "Eject_Coral"
           }
         },
         {
           "type": "wait",
           "data": {
-            "waitTime": 5.0
+            "waitTime": 1.0
           }
         },
         {
           "type": "named",
           "data": {
-            "name": "Stop_Intake"
+            "name": "Stop_Coral_Intake"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "TransitionToRobotStowed"
           }
         }
       ]

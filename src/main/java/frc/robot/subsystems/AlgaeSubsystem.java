@@ -34,11 +34,11 @@ public class AlgaeSubsystem extends SubsystemBase {
   RelativeEncoder algaeRotationEncoder = algaeIntakeRotationMotor.getExternalEncoder();
 
   public static final double kStowedPosition = 0;
-  public static final double kGroundPickupPosition = .9;
+  public static final double kGroundPickupPosition = 1;
   public static final double kProcessorPosition = .7;
-  public static final double kReefPickupPosition = .85;
-  public static final double kShootingPosition = .5;
-  public static final double kSafePosition = .85;
+  public static final double kReefPickupPosition = .865;
+  public static final double kShootingPosition = .504;
+  public static final double kSafePosition = .7;
 
   /** Subsystem-wide setpoints */
   public enum AlgaeSetpoint {
@@ -231,19 +231,7 @@ public class AlgaeSubsystem extends SubsystemBase {
       "Eject_Algae",
       ejectGamePieceCommand(),
       "Stop_Algae_Intake",
-      stopIntakeAtSpeedCommand(),
-      "Set_Algae_Setpoint_Stowed",
-      setSetpointCommand(AlgaeSetpoint.kStowedPosition),
-      "Set_Algae_Setpoint_Ground_Pickup",
-      setSetpointCommand(AlgaeSetpoint.kGroundPickupPosition),
-      "Set_Algae_Setpoint_Processor",
-      setSetpointCommand(AlgaeSetpoint.kProcessorPosition),
-      "Set_Algae_Setpoint_Reef_Pickup",
-      setSetpointCommand(AlgaeSetpoint.kReefPickupPosition),
-      "Set_Algae_Setpoint_Shooting",
-      setSetpointCommand(AlgaeSetpoint.kShootingPosition),
-      "Set_Algae_Setpoint_Safe", 
-      setSetpointCommand(AlgaeSetpoint.kSafePosition)
+      stopIntakeAtSpeedCommand()
     );
   }
 }

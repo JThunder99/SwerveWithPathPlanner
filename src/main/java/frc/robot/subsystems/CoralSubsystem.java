@@ -38,14 +38,20 @@ public class CoralSubsystem extends SubsystemBase {
   public static final double kStartingPosition = 0;
   public static final double kStowedPosition = .05;
   public static final double kHumanPickupPosition = .3;
-  public static final double kShootingPosition = .5;
+  public static final double kShootingLevel1Position = .4816;
+  public static final double kShootingLevel2Position = .5827;  //same as L4
+  public static final double kShootingLevel3Position = .5012;
+  public static final double kShootingLevel4Position = .5827;
 
   /** Subsystem-wide setpoints */
   public enum CoralSetpoint {
     kStartingPosition,
     kStowedPosition,
     kHumanPickupPosition,
-    kShootingPosition
+    kShootingLevel1Position,
+    kShootingLevel2Position,
+    kShootingLevel3Position,
+    kShootingLevel4Position
   }
 
   private double coralRotationCurrentTarget = kStartingPosition;
@@ -190,8 +196,17 @@ public class CoralSubsystem extends SubsystemBase {
             case kHumanPickupPosition:
             coralRotationCurrentTarget = kHumanPickupPosition;
               break;
-            case kShootingPosition:
-            coralRotationCurrentTarget = kShootingPosition;
+            case kShootingLevel1Position:
+            coralRotationCurrentTarget = kShootingLevel1Position;
+              break;
+            case kShootingLevel2Position:
+            coralRotationCurrentTarget = kShootingLevel2Position;
+              break;
+            case kShootingLevel3Position:
+            coralRotationCurrentTarget = kShootingLevel3Position;
+              break;
+            case kShootingLevel4Position:
+            coralRotationCurrentTarget = kShootingLevel4Position;
               break;
           }
         });
@@ -204,13 +219,7 @@ public class CoralSubsystem extends SubsystemBase {
       "Eject_Coral",
       ejectCoralCommand(),
       "Stop_Coral_Intake",
-      stopCoralIntakeAtSpeedCommand(),
-      "Set_Coral_Setpoint_Stowed",
-      setCoralSetpointCommand(CoralSetpoint.kStowedPosition),
-      "Set_Coral_Setpoint_Human_Pickup",
-      setCoralSetpointCommand(CoralSetpoint.kHumanPickupPosition),
-      "Set_Coral_Setpoint_Shooting",
-      setCoralSetpointCommand(CoralSetpoint.kShootingPosition)
+      stopCoralIntakeAtSpeedCommand()
     );
   }
 }

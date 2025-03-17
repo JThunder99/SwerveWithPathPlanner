@@ -32,7 +32,10 @@ public class CANdleSubsystem extends SubsystemBase {
         boolean algaeLoaded = algaeSubsystem.isAlgaeIntakeLoaded();
         boolean coralLoaded = coralSubsystem.isCoralIntakeLoaded();
         boolean algaeShooting = algaeSubsystem.getAlgaeRotationCurrentTarget() == AlgaeSubsystem.kShootingPosition;
-        boolean coralShooting = coralSubsystem.getCoralRotationCurrentTarget() == CoralSubsystem.kShootingPosition;
+        boolean coralShooting = coralSubsystem.getCoralRotationCurrentTarget() == CoralSubsystem.kShootingLevel1Position ||
+                                coralSubsystem.getCoralRotationCurrentTarget() == CoralSubsystem.kShootingLevel2Position ||
+                                coralSubsystem.getCoralRotationCurrentTarget() == CoralSubsystem.kShootingLevel3Position ||
+                                coralSubsystem.getCoralRotationCurrentTarget() == CoralSubsystem.kShootingLevel4Position;
 
         if (algaeLoaded != lastAlgaeLoaded || coralLoaded != lastCoralLoaded || algaeShooting != lastShooting || coralShooting != lastCoralShooting) {
             candle.clearAnimation(0);
