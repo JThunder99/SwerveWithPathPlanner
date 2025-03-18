@@ -70,7 +70,7 @@ public class CoralSubsystem extends SubsystemBase {
     coralIntakeMotor.configure(coralMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
     coralRotationMotorConfig
-    .inverted(true)
+    .inverted(false)
     .idleMode(IdleMode.kBrake);
 
     coralRotationMotorConfig.encoder
@@ -80,10 +80,10 @@ public class CoralSubsystem extends SubsystemBase {
         .feedbackSensor(FeedbackSensor.kAlternateOrExternalEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(0.4)
+        .p(0.3)
         .i(0)
         .d(0)
-        .outputRange(-.05, .05);
+        .outputRange(-.1, .1);
 
         coralRotationMotorConfig.closedLoop.maxMotion
         // Set MAXMotion parameters for position control. We don't need to pass

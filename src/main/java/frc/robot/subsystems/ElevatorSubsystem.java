@@ -33,14 +33,14 @@ public class ElevatorSubsystem extends SubsystemBase {
   SparkClosedLoopController  elevatorClosedLoopController = elevator1.getClosedLoopController();
   RelativeEncoder elevator1Encoder = elevator1.getExternalEncoder();
 
-  public static final int kStowedPosition = 0;
-  public static final int kGroundPosition = 7;
-  public static final int kFeederStation = 5;
-  public static final int kLevel1 = 0;
-  public static final int kLevel2 = 10;
-  public static final int kLevel3 = 15;
-  public static final int kLevel4 = 20;
-  public static final int kAlgaeShootingPosition = 20;
+  public static final double kStowedPosition = -.1;
+  public static final double kGroundPosition = .8;
+  public static final double kFeederStation = 2;
+  public static final double kLevel1 = 1.0629;
+  public static final double kLevel2 = 2.4042;
+  public static final double kLevel3 = 4.3796;
+  public static final double kLevel4 = 9.4831;
+  public static final double kAlgaeShootingPosition = 9.4831;
 
   /** Subsystem-wide setpoints */
   public enum ElevatorSetpoint {
@@ -74,14 +74,14 @@ public class ElevatorSubsystem extends SubsystemBase {
         .p(0.4)
         .i(0)
         .d(0)
-        .outputRange(-.05, .05);
+        .outputRange(-.25, .25);
 
         elevator1Config.closedLoop.maxMotion
         // Set MAXMotion parameters for position control. We don't need to pass
         // a closed loop slot, as it will default to slot 0.
         .maxVelocity(1000)
         .maxAcceleration(1000)
-        .allowedClosedLoopError(1);
+        .allowedClosedLoopError(.1);
 
     elevator1.configure(elevator1Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 

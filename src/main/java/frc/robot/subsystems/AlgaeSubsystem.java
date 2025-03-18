@@ -80,7 +80,7 @@ public class AlgaeSubsystem extends SubsystemBase {
         .p(0.4)
         .i(0)
         .d(0)
-        .outputRange(-.05, .05);
+        .outputRange(-.25, .25);
 
         algaeRotationMotorConfig.closedLoop.maxMotion
         // Set MAXMotion parameters for position control. We don't need to pass
