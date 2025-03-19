@@ -52,7 +52,7 @@ public class AlgaeSubsystem extends SubsystemBase {
 
   private double algaeRotationCurrentTarget = kStowedPosition;
 
-  public final CANrange algaeIntakeLoadSensor = new CANrange(20);
+  public final CANrange algaeIntakeLoadSensor = new CANrange(24);
 
   private boolean isLoadedLocked = false; // Track loaded state
 
@@ -126,7 +126,7 @@ public class AlgaeSubsystem extends SubsystemBase {
   }
 
   public void holdAlgaeIntake() {
-    algaeIntakeMotor.set(0.05); // Adjust the hold power as needed
+    algaeIntakeMotor.set(0.1); // Adjust the hold power as needed
   }
 
   private void moveToSetpoint() {
@@ -166,7 +166,7 @@ public class AlgaeSubsystem extends SubsystemBase {
    * Sets the rollers to pick up a game piece at half speed
    */
   public Command pickUpGamePieceCommand() {
-    return Commands.startEnd(() -> runIntake(.1), () -> {}, this) // No stop action—default command handles it
+    return Commands.startEnd(() -> runIntake(.50), () -> {}, this) // No stop action—default command handles it
             .withName("PickUpAlgae");
   }
 
@@ -174,7 +174,7 @@ public class AlgaeSubsystem extends SubsystemBase {
    * Sets the rollers to eject a game piece at half speed
    */
   public Command ejectGamePieceCommand() {
-    return Commands.startEnd(() -> runIntake(-.1), () -> {}, this) // No stop action—default command handles it
+    return Commands.startEnd(() -> runIntake(-.9), () -> {}, this) // No stop action—default command handles it
             .withName("EjectAlgae");
   }
 

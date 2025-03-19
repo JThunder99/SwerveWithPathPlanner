@@ -56,7 +56,7 @@ public class CoralSubsystem extends SubsystemBase {
 
   private double coralRotationCurrentTarget = kStartingPosition;
 
-  private CANrange coralIntakeLoadSensor = new CANrange(21);
+  private CANrange coralIntakeLoadSensor = new CANrange(25);
 
 
   public CoralSubsystem() {
@@ -112,7 +112,7 @@ public class CoralSubsystem extends SubsystemBase {
     // Assuming a very short distance indicates the intake is loaded
     double distance = coralIntakeLoadSensor.getDistance().getValueAsDouble();
     boolean isDetected = coralIntakeLoadSensor.getIsDetected().getValue();
-    return distance < .1 && isDetected == true; // Adjust the threshold value as needed
+    return distance < .05 && isDetected == true; // Adjust the threshold value as needed
   }
 
   public void runCoralIntake(double speed) {
@@ -160,7 +160,7 @@ public class CoralSubsystem extends SubsystemBase {
    * Sets the rollers to pick up a game piece at half speed
    */
   public Command pickUpCoralCommand() {
-    return Commands.startEnd(() -> runCoralIntake(.1), () -> {}, this) // No stop action—default command handles it
+    return Commands.startEnd(() -> runCoralIntake(.50), () -> {}, this) // No stop action—default command handles it
             .withName("PickUpCoral");
   }
 
@@ -168,7 +168,7 @@ public class CoralSubsystem extends SubsystemBase {
    * Sets the rollers to eject a game piece at half speed
    */
   public Command ejectCoralCommand() {
-    return Commands.startEnd(() -> runCoralIntake(-.1), () -> {}, this) // No stop action—default command handles it
+    return Commands.startEnd(() -> runCoralIntake(-.50), () -> {}, this) // No stop action—default command handles it
             .withName("EjectCoral");
   }
 

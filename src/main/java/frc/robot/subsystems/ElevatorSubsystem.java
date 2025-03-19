@@ -74,7 +74,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         .p(0.4)
         .i(0)
         .d(0)
-        .outputRange(-.25, .25);
+        .outputRange(-.5, .5);
 
         elevator1Config.closedLoop.maxMotion
         // Set MAXMotion parameters for position control. We don't need to pass
