@@ -40,7 +40,10 @@ public class ElevatorSubsystem extends SubsystemBase {
   public static final double kLevel2 = 2.4042;
   public static final double kLevel3 = 4.3796;
   public static final double kLevel4 = 9.4831;
+  public static final double kAlgaeReefLevel1Position = 3.3919;
+  public static final double kAlgaeReefLevel2Position = 5.3673;
   public static final double kAlgaeShootingPosition = 9.4831;
+  
 
   /** Subsystem-wide setpoints */
   public enum ElevatorSetpoint {
@@ -51,6 +54,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     kLevel2,
     kLevel3,
     kLevel4,
+    kAlgaeReefLevel1Position,
+    kAlgaeReefLevel2Position,
     kAlgaeShootingPosition
   }
 
@@ -169,6 +174,12 @@ public class ElevatorSubsystem extends SubsystemBase {
             case kLevel4:
               elevatorCurrentTarget = kLevel4;
               break;
+            case kAlgaeReefLevel1Position:
+              elevatorCurrentTarget = kAlgaeReefLevel1Position;
+              break;
+            case kAlgaeReefLevel2Position:
+              elevatorCurrentTarget = kAlgaeReefLevel2Position;
+              break;
             case kAlgaeShootingPosition:
               elevatorCurrentTarget = kAlgaeShootingPosition;
               break;
@@ -188,24 +199,28 @@ public class ElevatorSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Elevator Actual Position", elevator1Encoder.getPosition());
   }
 
-  // public Map<String, Command> getNamedCommands() {
-  //   return Map.of(
-  //     "Set_Elevator_Setpoint_Stowed",
-  //     setSetpointCommand(ElevatorSetpoint.kStowedPosition),
-  //     "Set_Elevator_Setpoint_Ground",
-  //     setSetpointCommand(ElevatorSetpoint.kGroundPosition),
-  //     "Set_Elevator_Setpoint_FeederStation",
-  //     setSetpointCommand(ElevatorSetpoint.kFeederStation),
-  //     "Set_Elevator_Setpoint_Level1",
-  //     setSetpointCommand(ElevatorSetpoint.kLevel1),
-  //     "Set_Elevator_Setpoint_Level2",
-  //     setSetpointCommand(ElevatorSetpoint.kLevel2),
-  //     "Set_Elevator_Setpoint_Level3",
-  //     setSetpointCommand(ElevatorSetpoint.kLevel3),
-  //     "Set_Elevator_Setpoint_Level4",
-  //     setSetpointCommand(ElevatorSetpoint.kLevel4),
-  //     "Set_Elevator_Setpoint_AlgaeShootingPosition",
-  //     setSetpointCommand(ElevatorSetpoint.kAlgaeShootingPosition)
-  //   );
-  // }
+  public Map<String, Command> getNamedCommands() {
+    return Map.of(
+      "Set_Elevator_Setpoint_Stowed",
+      setSetpointCommand(ElevatorSetpoint.kStowedPosition),
+      "Set_Elevator_Setpoint_Ground",
+      setSetpointCommand(ElevatorSetpoint.kGroundPosition),
+      "Set_Elevator_Setpoint_FeederStation",
+      setSetpointCommand(ElevatorSetpoint.kFeederStation),
+      "Set_Elevator_Setpoint_Level1",
+      setSetpointCommand(ElevatorSetpoint.kLevel1),
+      "Set_Elevator_Setpoint_Level2",
+      setSetpointCommand(ElevatorSetpoint.kLevel2),
+      "Set_Elevator_Setpoint_Level3",
+      setSetpointCommand(ElevatorSetpoint.kLevel3),
+      "Set_Elevator_Setpoint_Level4",
+      setSetpointCommand(ElevatorSetpoint.kLevel4),
+      "Set_Elevator_Setpoint_AlgaeReefLevel1", 
+      setSetpointCommand(ElevatorSetpoint.kAlgaeReefLevel1Position),
+      "Set_Elevator_Setpoint_AlgaeReefLevel2", 
+      setSetpointCommand(ElevatorSetpoint.kAlgaeReefLevel2Position),
+      "Set_Elevator_Setpoint_AlgaeShootingPosition",
+      setSetpointCommand(ElevatorSetpoint.kAlgaeShootingPosition)
+    );
+  }
 }

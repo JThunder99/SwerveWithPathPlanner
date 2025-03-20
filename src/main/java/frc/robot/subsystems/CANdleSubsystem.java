@@ -8,7 +8,7 @@ import com.ctre.phoenix.led.CANdle;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class CANdleSubsystem extends SubsystemBase {
-    private final CANdle candle = new CANdle(26, ""); // CAN ID 22
+    private final CANdle candle = new CANdle(26, "");
     private final AlgaeSubsystem algaeSubsystem;
     private final CoralSubsystem coralSubsystem;
 

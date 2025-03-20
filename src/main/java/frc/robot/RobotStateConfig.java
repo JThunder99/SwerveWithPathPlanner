@@ -38,13 +38,13 @@ public class RobotStateConfig {
     public static final RobotStateConfig ALGAE_REEF_LEVEL_1_PICKUP = new RobotStateConfig(
         CoralSetpoint.kStowedPosition,
         AlgaeSetpoint.kReefPickupPosition,
-        ElevatorSetpoint.kLevel1
+        ElevatorSetpoint.kAlgaeReefLevel1Position
     );
 
     public static final RobotStateConfig ALGAE_REEF_LEVEL_2_PICKUP = new RobotStateConfig(
         CoralSetpoint.kStowedPosition,
         AlgaeSetpoint.kReefPickupPosition,
-        ElevatorSetpoint.kLevel2
+        ElevatorSetpoint.kAlgaeReefLevel2Position
     );
 
     public static final RobotStateConfig ALGAE_SHOOTING = new RobotStateConfig(

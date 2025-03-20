@@ -38,7 +38,7 @@ public class AlgaeSubsystem extends SubsystemBase {
   public static final double kProcessorPosition = .7;
   public static final double kReefPickupPosition = .865;
   public static final double kShootingPosition = .504;
-  public static final double kSafePosition = .7;
+  public static final double kSafePosition = .6;
 
   /** Subsystem-wide setpoints */
   public enum AlgaeSetpoint {

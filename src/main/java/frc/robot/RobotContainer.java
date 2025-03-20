@@ -214,7 +214,7 @@ public class RobotContainer {
                 CoralSubsystem.setCoralSetpointCommand(CoralSetpoint.kStowedPosition),
                 Commands.waitUntil(() -> Math.abs(CoralSubsystem.getCoralRotationPosition() - CoralSubsystem.kStowedPosition) < 0.01).withTimeout(10.0)
             ),
-            () -> Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 1 ||
+            () -> Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 0.5 ||
                   Math.abs(CoralSubsystem.getCoralRotationPosition() - CoralSubsystem.kStowedPosition) < 0.01
         );
     
@@ -226,23 +226,23 @@ public class RobotContainer {
                     Commands.sequence(
                         Commands.runOnce(() -> System.out.println("Step: Elevator to Stowed for Algae Move")),
                         ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kStowedPosition),
-                        Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) < 1).withTimeout(10.0)
+                        Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) < 0.5).withTimeout(10.0)
                     ),
                     Commands.none(),
                     () -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01 && 
                           config.algaeTarget != AlgaeSetpoint.kStowedPosition
                 ),
                 Commands.runOnce(() -> System.out.println("Step: Algae to Safe (SafePosition)")),
-                AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kSafePosition), // Changed from kReefPickupPosition
+                AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kSafePosition),
                 Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kSafePosition) < 0.01).withTimeout(10.0)
             ),
             () -> {
-                boolean elevatorMoving = Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) > 1;
+                boolean elevatorMoving = Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) > 0.5;
                 boolean algaeAtTarget = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget)) < 0.01;
                 boolean algaeEnteringShooting = config.algaeTarget == AlgaeSetpoint.kShootingPosition &&
                                                Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01;
                 boolean algaeLeavingShooting = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kShootingPosition) < 0.01 &&
-                                              Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kAlgaeShootingPosition) < 1 &&
+                                              Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kAlgaeShootingPosition) < 0.5 &&
                                               config.elevatorTarget != ElevatorSetpoint.kAlgaeShootingPosition;
                 boolean algaeLeavingStowed = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01 &&
                                             config.algaeTarget != AlgaeSetpoint.kStowedPosition;
@@ -254,53 +254,45 @@ public class RobotContainer {
             }
         );
     
-        // Step 3: Adjust Algae to Target (including stowing if needed)
-        Command adjustAlgaeToTarget = Commands.either(
-            Commands.none(),
-            Commands.sequence(
-                Commands.runOnce(() -> {
-                    boolean loaded = AlgaeSubsystem.isAlgaeIntakeLoaded();
-                    AlgaeSubsystem.setLoadedLocked(loaded);
-                    System.out.println("Step: Algae to Target - Loaded: " + loaded);
-                }),
+        // Step 3: Adjust Elevator to Target (before algae moves to final target if needed)
+        Command adjustElevator = Commands.sequence(
+            Commands.runOnce(() -> System.out.println("Step: Elevator to Target")),
+            ElevatorSubsystem.setSetpointCommand(config.elevatorTarget),
+            Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 0.5).withTimeout(10.0)
+        );
+    
+        // Step 4: Adjust Algae to Target (after elevator is in position)
+        Command adjustAlgaeToTarget = Commands.sequence(
+            Commands.runOnce(() -> {
+                boolean loaded = AlgaeSubsystem.isAlgaeIntakeLoaded();
+                AlgaeSubsystem.setLoadedLocked(loaded);
+                System.out.println("Step: Algae to Target - Loaded: " + loaded);
+            }),
+            Commands.either(
+                Commands.sequence(
+                    Commands.runOnce(() -> System.out.println("Step: Elevator to Stowed for Algae Stow")),
+                    ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kStowedPosition),
+                    Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) < 0.5).withTimeout(10.0),
+                    AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget),
+                    Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
+                ),
                 Commands.either(
                     Commands.sequence(
-                        Commands.runOnce(() -> System.out.println("Step: Elevator to Stowed for Algae Stow")),
-                        ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kStowedPosition),
-                        Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) < 1).withTimeout(10.0),
-                        AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget), // Changed from kReefPickupPosition
-                        Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
+                        Commands.runOnce(() -> System.out.println("Step: Elevator to Algae Shooting")),
+                        ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kAlgaeShootingPosition),
+                        Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kAlgaeShootingPosition) < 0.5).withTimeout(10.0),
+                        AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kShootingPosition)
                     ),
-                    Commands.either(
-                        Commands.sequence(
-                            Commands.runOnce(() -> System.out.println("Step: Elevator to Algae Shooting")),
-                            ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kAlgaeShootingPosition),
-                            Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kAlgaeShootingPosition) < 1).withTimeout(10.0),
-                            AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kShootingPosition)
-                        ),
-                        AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget), // Changed from kReefPickupPosition
-                        () -> config.algaeTarget == AlgaeSetpoint.kShootingPosition
-                    ),
-                    () -> config.algaeTarget == AlgaeSetpoint.kStowedPosition && 
-                          Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) >= 0.01
+                    AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget),
+                    () -> config.algaeTarget == AlgaeSetpoint.kShootingPosition
                 ),
-                Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
+                () -> config.algaeTarget == AlgaeSetpoint.kStowedPosition && 
+                      Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) >= 0.01
             ),
-            () -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget)) < 0.01
+            Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
         );
     
-        // Step 4: Adjust Elevator to Target (after algae is set)
-        Command adjustElevator = Commands.either(
-            Commands.none(),
-            Commands.sequence(
-                Commands.runOnce(() -> System.out.println("Step: Elevator to Target")),
-                ElevatorSubsystem.setSetpointCommand(config.elevatorTarget),
-                Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 1).withTimeout(10.0)
-            ),
-            () -> Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 1
-        );
-    
-        // Step 5: Move Coral to Final Target (respecting loaded state and algae position)
+        // Step 5: Move Coral to Final Target
         Command adjustCoralToFinal = Commands.either(
             Commands.none(),
             Commands.sequence(
@@ -325,8 +317,8 @@ public class RobotContainer {
             debugStart,
             adjustCoralToStowed,
             adjustAlgaeToSafe,
+            adjustElevator,      // Moved before adjustAlgaeToTarget
             adjustAlgaeToTarget,
-            adjustElevator,
             adjustCoralToFinal
         ).handleInterrupt(() -> System.out.println("State transition interrupted"));
     }
@@ -338,10 +330,10 @@ public class RobotContainer {
                 case kStartingPosition -> CoralSubsystem.kStartingPosition;
                 case kStowedPosition -> CoralSubsystem.kStowedPosition;
                 case kHumanPickupPosition -> CoralSubsystem.kHumanPickupPosition;
-                case kShootingLevel1Position -> CoralSubsystem.kShootingLevel1Position;  // New
-                case kShootingLevel2Position -> CoralSubsystem.kShootingLevel2Position;  // New
-                case kShootingLevel3Position -> CoralSubsystem.kShootingLevel3Position;  // New
-                case kShootingLevel4Position -> CoralSubsystem.kShootingLevel4Position;  // New
+                case kShootingLevel1Position -> CoralSubsystem.kShootingLevel1Position;
+                case kShootingLevel2Position -> CoralSubsystem.kShootingLevel2Position;
+                case kShootingLevel3Position -> CoralSubsystem.kShootingLevel3Position;
+                case kShootingLevel4Position -> CoralSubsystem.kShootingLevel4Position;
             };
         } else if (setpoint instanceof AlgaeSetpoint) {
             return switch ((AlgaeSetpoint) setpoint) {
@@ -361,6 +353,8 @@ public class RobotContainer {
                 case kLevel2 -> ElevatorSubsystem.kLevel2;
                 case kLevel3 -> ElevatorSubsystem.kLevel3;
                 case kLevel4 -> ElevatorSubsystem.kLevel4;
+                case kAlgaeReefLevel1Position -> ElevatorSubsystem.kAlgaeReefLevel1Position;
+                case kAlgaeReefLevel2Position -> ElevatorSubsystem.kAlgaeReefLevel2Position;
                 case kAlgaeShootingPosition -> ElevatorSubsystem.kAlgaeShootingPosition;
             };
         }
