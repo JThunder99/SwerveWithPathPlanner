@@ -34,7 +34,7 @@ public class AlgaeSubsystem extends SubsystemBase {
   RelativeEncoder algaeRotationEncoder = algaeIntakeRotationMotor.getExternalEncoder();
 
   public static final double kStowedPosition = 0;
-  public static final double kGroundPickupPosition = 1;
+  public static final double kGroundPickupPosition = 1.04;
   public static final double kProcessorPosition = .7;
   public static final double kReefPickupPosition = .865;
   public static final double kShootingPosition = .504;
@@ -126,7 +126,7 @@ public class AlgaeSubsystem extends SubsystemBase {
   }
 
   public void holdAlgaeIntake() {
-    algaeIntakeMotor.set(0.1); // Adjust the hold power as needed
+    algaeIntakeMotor.set(0.15); // Adjust the hold power as needed
   }
 
   private void moveToSetpoint() {
@@ -166,7 +166,7 @@ public class AlgaeSubsystem extends SubsystemBase {
    * Sets the rollers to pick up a game piece at half speed
    */
   public Command pickUpGamePieceCommand() {
-    return Commands.startEnd(() -> runIntake(.50), () -> {}, this) // No stop action—default command handles it
+    return Commands.startEnd(() -> runIntake(.55), () -> {}, this) // No stop action—default command handles it
             .withName("PickUpAlgae");
   }
 

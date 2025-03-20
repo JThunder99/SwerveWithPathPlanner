@@ -33,15 +33,15 @@ public class ElevatorSubsystem extends SubsystemBase {
   SparkClosedLoopController  elevatorClosedLoopController = elevator1.getClosedLoopController();
   RelativeEncoder elevator1Encoder = elevator1.getExternalEncoder();
 
-  public static final double kStowedPosition = -.1;
+  public static final double kStowedPosition = -.0;
   public static final double kGroundPosition = .8;
   public static final double kFeederStation = 2;
   public static final double kLevel1 = 1.0629;
   public static final double kLevel2 = 2.4042;
   public static final double kLevel3 = 4.3796;
   public static final double kLevel4 = 9.4831;
-  public static final double kAlgaeReefLevel1Position = 3.3919;
-  public static final double kAlgaeReefLevel2Position = 5.3673;
+  public static final double kAlgaeReefLevel1Position = 4.3919;
+  public static final double kAlgaeReefLevel2Position = 7.3673;
   public static final double kAlgaeShootingPosition = 9.4831;
   
 
@@ -76,7 +76,7 @@ public class ElevatorSubsystem extends SubsystemBase {
         .feedbackSensor(FeedbackSensor.kAlternateOrExternalEncoder)
         // Set PID values for position control. We don't need to pass a closed
         // loop slot, as it will default to slot 0.
-        .p(0.4)
+        .p(0.2)
         .i(0)
         .d(0)
         .outputRange(-.5, .5);
