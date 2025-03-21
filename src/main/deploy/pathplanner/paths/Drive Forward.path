@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.512842465753424,
-        "y": 6.797238869863014
+        "x": 7.3125,
+        "y": 6.141
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.471943060777474,
-        "y": 6.761864113780966
+        "x": 6.209850358703573,
+        "y": 6.141
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.048630136986302,
-        "y": 5.264619006849315
+        "x": 6.5,
+        "y": 6.141
       },
       "prevControl": {
-        "x": 5.584852845537302,
-        "y": 6.1061327776782806
+        "x": 7.621196200697504,
+        "y": 6.141
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,14 +31,7 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "TransitionToCoralShootingLevel4",
-      "waypointRelativePos": 0.7976190476190456,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3,
     "maxAcceleration": 3,
@@ -49,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -122.47119229084852
+    "rotation": 178.7811247648687
   },
   "reversed": false,
   "folder": null,
