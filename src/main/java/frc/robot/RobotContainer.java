@@ -9,6 +9,8 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -54,6 +56,43 @@ public class RobotContainer {
     public ElevatorSubsystem ElevatorSubsystem;
     public CoralSubsystem CoralSubsystem;
     public CANdleSubsystem CANdleSubsystem;
+
+    // // Add field to store initial pose
+    // private Pose2d initialPose = new Pose2d();
+
+    // // Define the drive straight autonomous command
+    // private Command getDriveForwardAuto() {
+    //     double distanceToTravel = 2.0; // Meters
+    //     double speed = MaxSpeed * 0.5; // Half max speed
+
+    //     // Set initial pose at start
+    //     Command setInitialPose = Commands.runOnce(() -> {
+    //         initialPose = drivetrain.getState().Pose; // Use Phoenix 6 SwerveDriveState
+    //         System.out.println("Initial Pose Set: " + initialPose);
+    //     });
+
+    //     // Drive forward
+    //     Command driveForward = Commands.run(
+    //         () -> drivetrain.applyRequest(() -> 
+    //             forwardStraight.withVelocityX(speed).withVelocityY(0).withRotationalRate(0)
+    //         ),
+    //         drivetrain
+    //     ).until(() -> {
+    //         double distanceTraveled = drivetrain.getState().Pose.getTranslation().getDistance(initialPose.getTranslation());
+    //         return distanceTraveled >= distanceToTravel;
+    //     }).withTimeout(5.0);
+
+    //     // Stop the drivetrain
+    //     Command stopDrive = drivetrain.applyRequest(() -> brake);
+
+    //     return Commands.sequence(
+    //         Commands.runOnce(() -> System.out.println("Starting Drive Forward Auto")),
+    //         setInitialPose,
+    //         driveForward,
+    //         stopDrive,
+    //         Commands.runOnce(() -> System.out.println("Finished Drive Forward Auto"))
+    //     ).withName("DriveForward");
+    // }
 
     /* Path follower */
     private final SendableChooser<Command> autoChooser;
@@ -111,6 +150,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("TransitionToRobotStowed", transitionToStateCommand(RobotStateConfig.ROBOT_STOWED));
         
         autoChooser = AutoBuilder.buildAutoChooser("Do Nothing");
+        // autoChooser.addOption("Drive Forward", getDriveForwardAuto());
         SmartDashboard.putData("Auto Mode", autoChooser);
         
         configureBindings();

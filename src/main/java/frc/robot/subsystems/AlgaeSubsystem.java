@@ -36,7 +36,7 @@ public class AlgaeSubsystem extends SubsystemBase {
   public static final double kStowedPosition = 0;
   public static final double kGroundPickupPosition = 1.04;
   public static final double kProcessorPosition = .7;
-  public static final double kReefPickupPosition = .865;
+  public static final double kReefPickupPosition = .9;
   public static final double kShootingPosition = .504;
   public static final double kSafePosition = .6;
 
