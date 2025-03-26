@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -28,11 +29,12 @@ import frc.robot.subsystems.ElevatorSubsystem.ElevatorSetpoint;
 import frc.robot.subsystems.AlgaeSubsystem;
 import frc.robot.subsystems.AlgaeSubsystem.AlgaeSetpoint;
 import frc.robot.subsystems.CANdleSubsystem;
+import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.CoralSubsystem.CoralSetpoint;
 
 public class RobotContainer {
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * .5; // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond) *.75; // 3/4 of a rotation per second max angular velocity
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -56,6 +58,7 @@ public class RobotContainer {
     public ElevatorSubsystem ElevatorSubsystem;
     public CoralSubsystem CoralSubsystem;
     public CANdleSubsystem CANdleSubsystem;
+    public ClimberSubsystem ClimberSubsystem;
 
     // // Add field to store initial pose
     // private Pose2d initialPose = new Pose2d();
@@ -102,6 +105,7 @@ public class RobotContainer {
         ElevatorSubsystem = new ElevatorSubsystem();
         CoralSubsystem = new CoralSubsystem();
         CANdleSubsystem = new CANdleSubsystem(AlgaeSubsystem, CoralSubsystem);
+        ClimberSubsystem = new ClimberSubsystem();
 
         // Default command for AlgaeSubsystem
         AlgaeSubsystem.setDefaultCommand(
@@ -164,8 +168,8 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed * .5) // Drive forward with negative Y (forward)
+                    .withVelocityY(-joystick.getLeftX() * MaxSpeed * .5) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
@@ -193,6 +197,19 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        // Combine left and right trigger axes for climber control
+        new Trigger(() -> joystick.getLeftTriggerAxis() > 0.1 || joystick.getRightTriggerAxis() > 0.1)
+            .whileTrue(new RunCommand(() -> {
+                double leftTrigger = joystick.getLeftTriggerAxis();
+                double rightTrigger = joystick.getRightTriggerAxis();
+                double netSpeed = leftTrigger - rightTrigger; // Positive for left, negative for right
+                ClimberSubsystem.setClimberSpeed(netSpeed);
+            }, ClimberSubsystem));
+
+        // When neither trigger is pressed, stop the climber
+        new Trigger(() -> joystick.getLeftTriggerAxis() <= 0.1 && joystick.getRightTriggerAxis() <= 0.1)
+            .onTrue(ClimberSubsystem.runClimberAtSpeedCommand(0.0));
             
     }
 
