@@ -275,26 +275,31 @@ public class RobotContainer {
                   Math.abs(CoralSubsystem.getCoralRotationPosition() - CoralSubsystem.kStowedPosition) < 0.01
         );
     
-        // Step 2: Adjust Algae to Safe Position (kSafePosition) if entering/leaving kShootingPosition or moving from kStowedPosition
+        // Step 2: Adjust Algae to Safe Position if needed
         Command adjustAlgaeToSafe = Commands.either(
             Commands.none(),
             Commands.sequence(
                 Commands.either(
                     Commands.sequence(
-                        Commands.runOnce(() -> System.out.println("Step: Elevator to Stowed for Algae Move")),
+                        Commands.runOnce(() -> System.out.println("Step: Elevator to Stowed for Algae Safe Move")),
                         ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kStowedPosition),
                         Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) < 0.5).withTimeout(10.0)
                     ),
                     Commands.none(),
-                    () -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01 && 
-                          config.algaeTarget != AlgaeSetpoint.kStowedPosition
+                    () -> {
+                        boolean algaeLeavingStowed = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01 &&
+                                                    config.algaeTarget != AlgaeSetpoint.kStowedPosition;
+                        boolean elevatorTooHigh = ElevatorSubsystem.getElevatorPosition() > ElevatorSubsystem.kGroundPosition;
+                        return algaeLeavingStowed && elevatorTooHigh;
+                    }
                 ),
                 Commands.runOnce(() -> System.out.println("Step: Algae to Safe (SafePosition)")),
                 AlgaeSubsystem.setSetpointCommand(AlgaeSetpoint.kSafePosition),
                 Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kSafePosition) < 0.01).withTimeout(10.0)
             ),
             () -> {
-                boolean elevatorMoving = Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) > 0.5;
+                boolean elevatorMovingDown = getSetpointValue(config.elevatorTarget) < ElevatorSubsystem.getElevatorPosition();
+                boolean algaeBelowSafe = AlgaeSubsystem.getAlgaeRotationPosition() > AlgaeSubsystem.kSafePosition;
                 boolean algaeAtTarget = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget)) < 0.01;
                 boolean algaeEnteringShooting = config.algaeTarget == AlgaeSetpoint.kShootingPosition &&
                                                Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01;
@@ -303,15 +308,16 @@ public class RobotContainer {
                                               config.elevatorTarget != ElevatorSetpoint.kAlgaeShootingPosition;
                 boolean algaeLeavingStowed = Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) < 0.01 &&
                                             config.algaeTarget != AlgaeSetpoint.kStowedPosition;
-                boolean needsSafeMove = algaeEnteringShooting || algaeLeavingShooting || algaeLeavingStowed;
-                System.out.println("Algae Safe Check - Moving: " + elevatorMoving + ", At Target: " + algaeAtTarget + 
-                                  ", Entering: " + algaeEnteringShooting + ", Leaving Shooting: " + algaeLeavingShooting + 
-                                  ", Leaving Stowed: " + algaeLeavingStowed + ", Needs Safe: " + needsSafeMove);
-                return !elevatorMoving || algaeAtTarget || !needsSafeMove;
+                boolean needsSafeMove = algaeEnteringShooting || algaeLeavingShooting || algaeLeavingStowed || (elevatorMovingDown && algaeBelowSafe);
+                System.out.println("Algae Safe Check - Elevator Down: " + elevatorMovingDown + ", Algae Below Safe: " + algaeBelowSafe + 
+                                  ", At Target: " + algaeAtTarget + ", Entering: " + algaeEnteringShooting + 
+                                  ", Leaving Shooting: " + algaeLeavingShooting + ", Leaving Stowed: " + algaeLeavingStowed + 
+                                  ", Needs Safe: " + needsSafeMove);
+                return algaeAtTarget || !needsSafeMove;
             }
         );
     
-        // Step 3: Adjust Elevator to Target (before algae moves to final target if needed)
+        // Step 3: Adjust Elevator to Target
         Command adjustElevator = Commands.sequence(
             Commands.runOnce(() -> System.out.println("Step: Elevator to Target")),
             ElevatorSubsystem.setSetpointCommand(config.elevatorTarget),
@@ -331,7 +337,11 @@ public class RobotContainer {
                     ElevatorSubsystem.setSetpointCommand(ElevatorSetpoint.kStowedPosition),
                     Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - ElevatorSubsystem.kStowedPosition) < 0.5).withTimeout(10.0),
                     AlgaeSubsystem.setSetpointCommand(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget),
-                    Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
+                    Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0),
+                    // Restore elevator to target if it’s not kStowedPosition
+                    Commands.runOnce(() -> System.out.println("Step: Elevator Restore to Target")),
+                    ElevatorSubsystem.setSetpointCommand(config.elevatorTarget),
+                    Commands.waitUntil(() -> Math.abs(ElevatorSubsystem.getElevatorPosition() - getSetpointValue(config.elevatorTarget)) < 0.5).withTimeout(10.0)
                 ),
                 Commands.either(
                     Commands.sequence(
@@ -344,7 +354,8 @@ public class RobotContainer {
                     () -> config.algaeTarget == AlgaeSetpoint.kShootingPosition
                 ),
                 () -> config.algaeTarget == AlgaeSetpoint.kStowedPosition && 
-                      Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) >= 0.01
+                      Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - AlgaeSubsystem.kStowedPosition) >= 0.01 &&
+                      getSetpointValue(config.elevatorTarget) < ElevatorSubsystem.getElevatorPosition()
             ),
             Commands.waitUntil(() -> Math.abs(AlgaeSubsystem.getAlgaeRotationPosition() - getSetpointValue(config.algaeTarget == AlgaeSetpoint.kStowedPosition && AlgaeSubsystem.getLoadedLocked() ? AlgaeSetpoint.kSafePosition : config.algaeTarget)) < 0.01).withTimeout(10.0)
         );
@@ -374,7 +385,7 @@ public class RobotContainer {
             debugStart,
             adjustCoralToStowed,
             adjustAlgaeToSafe,
-            adjustElevator,      // Moved before adjustAlgaeToTarget
+            adjustElevator,
             adjustAlgaeToTarget,
             adjustCoralToFinal
         ).handleInterrupt(() -> System.out.println("State transition interrupted"));
