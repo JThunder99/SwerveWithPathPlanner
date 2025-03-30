@@ -35,7 +35,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public static final double kStowedPosition = -.0;
   public static final double kGroundPosition = .8;
-  public static final double kFeederStation = 2;
+  public static final double kFeederStation = 1;
   public static final double kLevel1 = 1.0629;
   public static final double kLevel2 = 2.4042;
   public static final double kLevel3 = 4.3796;

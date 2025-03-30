@@ -37,7 +37,7 @@ public class CoralSubsystem extends SubsystemBase {
 
   public static final double kStartingPosition = 0;
   public static final double kStowedPosition = .05;
-  public static final double kHumanPickupPosition = .3;
+  public static final double kHumanPickupPosition = .2;
   public static final double kShootingLevel1Position = .4816;
   public static final double kShootingLevel2Position = .5827;  //same as L4
   public static final double kShootingLevel3Position = .5012;
