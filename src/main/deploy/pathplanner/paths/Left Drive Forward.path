@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.86,
-        "y": 4.048
+        "x": 7.139659090909091,
+        "y": 6.15
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.266046983143691,
-        "y": 4.048
+        "x": 6.028659090909091,
+        "y": 6.15
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.47,
-        "y": 4.04753852739726
+        "x": 6.092642045454545,
+        "y": 6.15
       },
       "prevControl": {
-        "x": 6.149711694383158,
-        "y": 4.04753852739726
+        "x": 6.611642045454545,
+        "y": 6.15
       },
       "nextControl": null,
       "isLocked": false,
@@ -31,14 +31,7 @@
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "TransitionToRobotStowed",
-      "waypointRelativePos": 0.7452380952380936,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 3.0,
     "maxAcceleration": 3.0,
@@ -52,7 +45,7 @@
     "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Test Stuff",
+  "folder": "Drive Forward",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

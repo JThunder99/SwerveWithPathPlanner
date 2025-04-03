@@ -7,13 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Test to the side"
+            "pathName": "Left Reef"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "TransitionToCoralShootingLevel4"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Test Stuff",
+  "folder": "L4 Coral",
   "choreoAuto": false
 }

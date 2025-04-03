@@ -7,13 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Drive Forward"
+            "pathName": "Right Reef"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "TransitionToCoralShootingLevel4"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "L4 Coral",
   "choreoAuto": false
 }
