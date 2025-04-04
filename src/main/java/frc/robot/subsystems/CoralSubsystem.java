@@ -36,7 +36,7 @@ public class CoralSubsystem extends SubsystemBase {
   RelativeEncoder coralRotationEncoder = coralIntakeRotationMotor.getExternalEncoder();
 
   public static final double kStartingPosition = 0;
-  public static final double kStowedPosition = .05;
+  public static final double kStowedPosition = .05; //.05
   public static final double kHumanPickupPosition = .2;
   public static final double kShootingLevel1Position = .4816;
   public static final double kShootingLevel2Position = .5827;  //same as L4
@@ -83,7 +83,7 @@ public class CoralSubsystem extends SubsystemBase {
         .p(0.3)
         .i(0)
         .d(0)
-        .outputRange(-.1, .1);
+        .outputRange(-.15, .15);
 
         coralRotationMotorConfig.closedLoop.maxMotion
         // Set MAXMotion parameters for position control. We don't need to pass
@@ -120,7 +120,7 @@ public class CoralSubsystem extends SubsystemBase {
   }
 
   public void holdCoralIntake() {
-    coralIntakeMotor.set(0.15); // Adjust the hold power as needed
+    coralIntakeMotor.set(0.05); // Adjust the hold power as needed
   }
 
   private void moveCoralToSetpoint() {
